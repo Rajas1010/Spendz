@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Expense Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+            padding-top: 20px;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            background-color: #f1f7f4;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 0px;
+            max-height: 87vh;
+            overflow: hidden;
+        }
+
+        .clear-btn {
+            background-color: #7c9d56;
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .clear-btn:hover {
+            background-color: #6a8c4c;
+        }
+
+        .expense-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .expense-form input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            width: 40%;
+        }
+
+        .add-btn {
+            background-color: #7c9d56;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .add-btn:hover {
+            background-color: #6a8c4c;
+        }
+
+        .expense-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+            max-height: calc(90vh - 180px);
+        }
+
+        .expense-item {
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .expense-item .expense-title {
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        .expense-item .expense-amount {
+            width: 120px;
+            text-align: right;
+        }
+
+        .delete-btn, .edit-btn {
+            background-color: #ff6f61;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        .edit-btn {
+            background-color: #ffa500;
+        }
+
+        .edit-btn:hover {
+            background-color: #e68900;
+        }
+
+        .delete-btn:hover {
+            background-color: #e65c4b;
+        }
+
+        .total-amount {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #7c9d56;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .buttons-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .expense-item span {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <button class="clear-btn" onclick="clearAll()">Clear All</button>
+        <div class="expense-form">
+            <input type="text" id="expenseTitle" placeholder="Expense Title" />
+            <input type="number" id="expenseAmount" placeholder="Amount" />
+            <button class="add-btn" onclick="addExpense()">Add Expense</button>
+        </div>
+        
+        <div class="expense-list" id="expenseList"></div>
+
+        <div class="total-amount">
+            <h2>Total: <span id="totalAmount">0</span></h2>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadExpenses();
+        });
+
+        function addExpense() {
+            const title = document.getElementById('expenseTitle').value.trim();
+            const amount = parseFloat(document.getElementById('expenseAmount').value.trim());
+
+            if (!title || isNaN(amount) || amount <= 0) {
+                alert("Please enter a valid title and amount.");
+                return;
+            }
+
+            const expense = {
+                title: title,
+                amount: amount
+            };
+
+            let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            expenses.push(expense);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            document.getElementById('expenseTitle').value = '';
+            document.getElementById('expenseAmount').value = '';
+            loadExpenses();
+        }
+
+        function deleteExpense(index) {
+            if (confirm("Are you sure you want to delete this expense?")) {
+                let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+                expenses.splice(index, 1);
+                localStorage.setItem('expenses', JSON.stringify(expenses));
+                loadExpenses();
+            }
+        }
+
+        function editExpense(index) {
+            let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            const expense = expenses[index];
+            document.getElementById('expenseTitle').value = expense.title;
+            document.getElementById('expenseAmount').value = expense.amount;
+            expenses.splice(index, 1);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            loadExpenses();
+        }
+
+        function loadExpenses() {
+            const expenseListContainer = document.getElementById('expenseList');
+            const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            expenseListContainer.innerHTML = '';
+            let totalAmount = 0;
+
+            expenses.forEach((expense, index) => {
+                const expenseItem = document.createElement('div');
+                expenseItem.classList.add('expense-item');
+                expenseItem.innerHTML = `
+                    <span class="expense-title">${expense.title}</span>
+                    <span class="expense-amount">₹${expense.amount.toFixed(2)}</span>
+                    <div class="buttons-container">
+                        <button class="edit-btn" onclick="editExpense(${index})">Edit</button>
+                        <button class="delete-btn" onclick="deleteExpense(${index})">Delete</button>
+                    </div>
+                `;
+                expenseListContainer.appendChild(expenseItem);
+                totalAmount += expense.amount;
+            });
+
+            document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+        }
+
+        function clearAll() {
+            if (confirm("Are you sure you want to clear all expenses?")) {
+                localStorage.removeItem('expenses');
+                loadExpenses();
+            }
+        }
+    </script>
+</body>
+</html>
