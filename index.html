@@ -183,10 +183,10 @@
 
         <div class="total-amount-container">
             <div class="total-amount">
-                <h2>Total Marked: ₹<span id="totalMarkedAmount">0</span></h2>
+                <h2>Total Marked: ₹ <span id="totalMarkedAmount">0</span></h2>
             </div>
             <div class="total-amount-large">
-                <h2>Total All: ₹<span id="totalAmount">0</span></h2>
+                <h2>Total All: ₹ <span id="totalAmount">0</span></h2>
             </div>
         </div>
     </div>
@@ -272,8 +272,8 @@
                 }
             });
 
-            document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
-            document.getElementById('totalMarkedAmount').textContent = totalCheckedAmount.toFixed(2);
+            document.getElementById('totalAmount').textContent = totalAmount.toFixed(0);
+            document.getElementById('totalMarkedAmount').textContent = totalCheckedAmount.toFixed(0);
         }
 
         function toggleCheck(index) {
