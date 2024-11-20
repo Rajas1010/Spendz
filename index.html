@@ -100,6 +100,7 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            cursor: move;
         }
 
         .expense-item .expense-title {
@@ -151,6 +152,10 @@
         .expense-item span {
             display: inline-block;
         }
+
+        .checkbox {
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -171,6 +176,8 @@
     </div>
 
     <script>
+        let dragIndex = -1;
+
         document.addEventListener('DOMContentLoaded', () => {
             loadExpenses();
         });
@@ -186,7 +193,8 @@
 
             const expense = {
                 title: title,
-                amount: amount
+                amount: amount,
+                checked: false
             };
 
             let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
@@ -225,7 +233,12 @@
             expenses.forEach((expense, index) => {
                 const expenseItem = document.createElement('div');
                 expenseItem.classList.add('expense-item');
+                expenseItem.setAttribute('draggable', true);
+                expenseItem.setAttribute('ondragstart', `dragStart(event, ${index})`);
+                expenseItem.setAttribute('ondragover', 'dragOver(event)');
+                expenseItem.setAttribute('ondrop', `drop(event, ${index})`);
                 expenseItem.innerHTML = `
+                    <input type="checkbox" class="checkbox" ${expense.checked ? 'checked' : ''} onclick="toggleCheck(${index})">
                     <span class="expense-title">${expense.title}</span>
                     <span class="expense-amount">₹${expense.amount.toFixed(2)}</span>
                     <div class="buttons-container">
@@ -240,11 +253,38 @@
             document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
         }
 
+        function toggleCheck(index) {
+            let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            expenses[index].checked = !expenses[index].checked;
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+        }
+
         function clearAll() {
             if (confirm("Are you sure you want to clear all expenses?")) {
                 localStorage.removeItem('expenses');
                 loadExpenses();
             }
+        }
+
+        function dragStart(event, index) {
+            dragIndex = index;
+            event.dataTransfer.setData("text", index);
+        }
+
+        function dragOver(event) {
+            event.preventDefault();
+        }
+
+        function drop(event, index) {
+            event.preventDefault();
+            if (dragIndex === index) return;
+
+            let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            const draggedExpense = expenses[dragIndex];
+            expenses.splice(dragIndex, 1);
+            expenses.splice(index, 0, draggedExpense);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            loadExpenses();
         }
     </script>
 </body>
