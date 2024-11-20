@@ -135,12 +135,23 @@
             background-color: #e65c4b;
         }
 
-        .total-amount {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #7c9d56;
+        .total-amount-container {
+            display: flex;
+            justify-content: space-between;
             margin-top: 20px;
+            width: 100%;
+        }
+
+        .total-amount {
+            font-size: 0.6em;
+            color: #7c9d56;
             text-align: left;
+        }
+
+        .total-amount-large {
+            font-size: 0.6em;
+            color: #7c9d56;
+            text-align: right;
         }
 
         .buttons-container {
@@ -170,8 +181,13 @@
         
         <div class="expense-list" id="expenseList"></div>
 
-        <div class="total-amount">
-            <h2>Total: <span id="totalAmount">0</span></h2>
+        <div class="total-amount-container">
+            <div class="total-amount">
+                <h2>Total Marked: ₹<span id="totalMarkedAmount">0</span></h2>
+            </div>
+            <div class="total-amount-large">
+                <h2>Total All: ₹<span id="totalAmount">0</span></h2>
+            </div>
         </div>
     </div>
 
@@ -229,6 +245,7 @@
             const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
             expenseListContainer.innerHTML = '';
             let totalAmount = 0;
+            let totalCheckedAmount = 0;
 
             expenses.forEach((expense, index) => {
                 const expenseItem = document.createElement('div');
@@ -247,16 +264,23 @@
                     </div>
                 `;
                 expenseListContainer.appendChild(expenseItem);
+
                 totalAmount += expense.amount;
+
+                if (expense.checked) {
+                    totalCheckedAmount += expense.amount;
+                }
             });
 
             document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+            document.getElementById('totalMarkedAmount').textContent = totalCheckedAmount.toFixed(2);
         }
 
         function toggleCheck(index) {
             let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
             expenses[index].checked = !expenses[index].checked;
             localStorage.setItem('expenses', JSON.stringify(expenses));
+            loadExpenses();
         }
 
         function clearAll() {
