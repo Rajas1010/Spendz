@@ -40,6 +40,104 @@
             overflow: hidden;
         }
 
+        /* ---------- Views ---------- */
+        .view { display: none; flex-direction: column; height: 100%; }
+        .view.active { display: flex; }
+
+        /* ---------- Home page ---------- */
+        .app-title {
+            color: #7c9d56;
+            margin-bottom: 15px;
+        }
+
+        .lists-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+            max-height: calc(90vh - 160px);
+        }
+
+        .list-item {
+            background-color: #ffffff;
+            padding: 12px 14px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .list-item .list-name {
+            flex-grow: 1;
+            text-align: left;
+            cursor: pointer;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .list-item .list-total {
+            color: #7c9d56;
+            margin: 0 10px;
+            white-space: nowrap;
+        }
+
+        .empty-msg {
+            color: #999;
+            margin-top: 20px;
+        }
+
+        .add-list-btn {
+            background-color: #7c9d56;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .add-list-btn:hover { background-color: #6a8c4c; }
+
+        /* ---------- Expense page ---------- */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .back-btn {
+            background-color: #7c9d56;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9em;
+        }
+
+        .back-btn:hover { background-color: #6a8c4c; }
+
+        .back-btn .arrow { font-size: 1.1em; line-height: 1; }
+
+        .current-list-name {
+            flex-grow: 1;
+            text-align: right;
+            color: #7c9d56;
+            font-size: 1.1em;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .clear-btn {
             background-color: #7c9d56;
             color: white;
@@ -51,9 +149,7 @@
             margin-bottom: 15px;
         }
 
-        .clear-btn:hover {
-            background-color: #6a8c4c;
-        }
+        .clear-btn:hover { background-color: #6a8c4c; }
 
         .expense-form {
             display: flex;
@@ -78,9 +174,7 @@
             cursor: pointer;
         }
 
-        .add-btn:hover {
-            background-color: #6a8c4c;
-        }
+        .add-btn:hover { background-color: #6a8c4c; }
 
         .expense-list {
             flex-grow: 1;
@@ -89,7 +183,7 @@
             flex-direction: column;
             gap: 10px;
             margin-top: 20px;
-            max-height: calc(90vh - 180px);
+            max-height: calc(90vh - 240px);
         }
 
         .expense-item {
@@ -123,17 +217,9 @@
             margin-left: 5px;
         }
 
-        .edit-btn {
-            background-color: #ffa500;
-        }
-
-        .edit-btn:hover {
-            background-color: #e68900;
-        }
-
-        .delete-btn:hover {
-            background-color: #e65c4b;
-        }
+        .edit-btn { background-color: #ffa500; }
+        .edit-btn:hover { background-color: #e68900; }
+        .delete-btn:hover { background-color: #e65c4b; }
 
         .total-amount-container {
             display: flex;
@@ -160,45 +246,170 @@
             gap: 10px;
         }
 
-        .expense-item span {
-            display: inline-block;
-        }
+        .expense-item span { display: inline-block; }
 
-        .checkbox {
-            margin-right: 10px;
-        }
+        .checkbox { margin-right: 10px; }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <button class="clear-btn" onclick="clearAll()">Clear All</button>
-        <div class="expense-form">
-            <input type="text" id="expenseTitle" placeholder="Expense Title" />
-            <input type="number" id="expenseAmount" placeholder="Amount" />
-            <button class="add-btn" onclick="addExpense()">Add Expense</button>
-        </div>
-        
-        <div class="expense-list" id="expenseList"></div>
 
-        <div class="total-amount-container">
-            <div class="total-amount">
-                <h2>Total Marked: ₹ <span id="totalMarkedAmount">0</span></h2>
+        <!-- ============ HOME / LISTS VIEW ============ -->
+        <div id="homeView" class="view active">
+            <h1 class="app-title">SpendZ</h1>
+            <div class="lists-container" id="listsContainer"></div>
+            <button class="add-list-btn" onclick="addList()">+ Add New List</button>
+        </div>
+
+        <!-- ============ EXPENSE VIEW ============ -->
+        <div id="expenseView" class="view">
+            <div class="header">
+                <button class="back-btn" onclick="goHome()">
+                    <span class="arrow">&#8592;</span> Back to Lists
+                </button>
+                <span class="current-list-name" id="currentListName"></span>
             </div>
-            <div class="total-amount-large">
-                <h2>Total All: ₹ <span id="totalAmount">0</span></h2>
+
+            <button class="clear-btn" onclick="clearAll()">Clear All</button>
+
+            <div class="expense-form">
+                <input type="text" id="expenseTitle" placeholder="Expense Title" />
+                <input type="number" id="expenseAmount" placeholder="Amount" />
+                <button class="add-btn" onclick="addExpense()">Add Expense</button>
+            </div>
+
+            <div class="expense-list" id="expenseList"></div>
+
+            <div class="total-amount-container">
+                <div class="total-amount">
+                    <h2>Total Marked: &#8377; <span id="totalMarkedAmount">0</span></h2>
+                </div>
+                <div class="total-amount-large">
+                    <h2>Total All: &#8377; <span id="totalAmount">0</span></h2>
+                </div>
             </div>
         </div>
+
     </div>
 
     <script>
         let dragIndex = -1;
+        let currentList = null; // name of the list currently open
 
+        /* ---------- Storage helpers ---------- */
+        // Index of list names is kept in "expenseLists".
+        // Each list's expenses are stored separately under "expenses_<name>".
+
+        function getLists() {
+            return JSON.parse(localStorage.getItem('expenseLists')) || [];
+        }
+
+        function saveLists(lists) {
+            localStorage.setItem('expenseLists', JSON.stringify(lists));
+        }
+
+        function listKey(name) {
+            return 'expenses_' + name;
+        }
+
+        function getExpenses(name) {
+            return JSON.parse(localStorage.getItem(listKey(name))) || [];
+        }
+
+        function saveExpenses(name, expenses) {
+            localStorage.setItem(listKey(name), JSON.stringify(expenses));
+        }
+
+        /* ---------- View switching ---------- */
         document.addEventListener('DOMContentLoaded', () => {
-            loadExpenses();
+            loadLists();
         });
 
+        function showView(id) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function goHome() {
+            currentList = null;
+            loadLists();
+            showView('homeView');
+        }
+
+        function openList(name) {
+            currentList = name;
+            document.getElementById('currentListName').textContent = name;
+            showView('expenseView');
+            loadExpenses();
+        }
+
+        /* ---------- Home page logic ---------- */
+        function loadLists() {
+            const container = document.getElementById('listsContainer');
+            const lists = getLists();
+            container.innerHTML = '';
+
+            if (lists.length === 0) {
+                container.innerHTML = '<p class="empty-msg">No lists yet. Add one below!</p>';
+                return;
+            }
+
+            lists.forEach((name, index) => {
+                const expenses = getExpenses(name);
+                const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+                const item = document.createElement('div');
+                item.classList.add('list-item');
+                item.innerHTML = `
+                    <span class="list-name">${name}</span>
+                    <span class="list-total">&#8377;${total.toFixed(0)}</span>
+                    <button class="delete-btn" onclick="deleteList(${index})">Delete</button>
+                `;
+                // Open list when the name is clicked
+                item.querySelector('.list-name').addEventListener('click', () => openList(name));
+                container.appendChild(item);
+            });
+        }
+
+        function addList() {
+            let name = prompt("Enter a name for the new list:");
+            if (name === null) return; // cancelled
+            name = name.trim();
+
+            if (!name) {
+                alert("Please enter a valid list name.");
+                return;
+            }
+
+            const lists = getLists();
+            if (lists.includes(name)) {
+                alert("A list with that name already exists.");
+                return;
+            }
+
+            lists.push(name);
+            saveLists(lists);
+            saveExpenses(name, []); // initialise empty list
+
+            openList(name); // navigate straight to the new list
+        }
+
+        function deleteList(index) {
+            const lists = getLists();
+            const name = lists[index];
+            if (confirm(`Delete the list "${name}" and all its expenses?`)) {
+                localStorage.removeItem(listKey(name));
+                lists.splice(index, 1);
+                saveLists(lists);
+                loadLists();
+            }
+        }
+
+        /* ---------- Expense page logic (per current list) ---------- */
         function addExpense() {
+            if (!currentList) return;
+
             const title = document.getElementById('expenseTitle').value.trim();
             const amount = parseFloat(document.getElementById('expenseAmount').value.trim());
 
@@ -207,15 +418,12 @@
                 return;
             }
 
-            const expense = {
-                title: title,
-                amount: amount,
-                checked: false
-            };
+            const expense = { title: title, amount: amount, checked: false };
 
-            let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            const expenses = getExpenses(currentList);
             expenses.push(expense);
-            localStorage.setItem('expenses', JSON.stringify(expenses));
+            saveExpenses(currentList, expenses);
+
             document.getElementById('expenseTitle').value = '';
             document.getElementById('expenseAmount').value = '';
             loadExpenses();
@@ -223,26 +431,26 @@
 
         function deleteExpense(index) {
             if (confirm("Are you sure you want to delete this expense?")) {
-                let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+                const expenses = getExpenses(currentList);
                 expenses.splice(index, 1);
-                localStorage.setItem('expenses', JSON.stringify(expenses));
+                saveExpenses(currentList, expenses);
                 loadExpenses();
             }
         }
 
         function editExpense(index) {
-            let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            const expenses = getExpenses(currentList);
             const expense = expenses[index];
             document.getElementById('expenseTitle').value = expense.title;
             document.getElementById('expenseAmount').value = expense.amount;
             expenses.splice(index, 1);
-            localStorage.setItem('expenses', JSON.stringify(expenses));
+            saveExpenses(currentList, expenses);
             loadExpenses();
         }
 
         function loadExpenses() {
             const expenseListContainer = document.getElementById('expenseList');
-            const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            const expenses = getExpenses(currentList);
             expenseListContainer.innerHTML = '';
             let totalAmount = 0;
             let totalCheckedAmount = 0;
@@ -257,7 +465,7 @@
                 expenseItem.innerHTML = `
                     <input type="checkbox" class="checkbox" ${expense.checked ? 'checked' : ''} onclick="toggleCheck(${index})">
                     <span class="expense-title">${expense.title}</span>
-                    <span class="expense-amount">₹${expense.amount.toFixed(2)}</span>
+                    <span class="expense-amount">&#8377;${expense.amount.toFixed(2)}</span>
                     <div class="buttons-container">
                         <button class="edit-btn" onclick="editExpense(${index})">Edit</button>
                         <button class="delete-btn" onclick="deleteExpense(${index})">Delete</button>
@@ -266,10 +474,7 @@
                 expenseListContainer.appendChild(expenseItem);
 
                 totalAmount += expense.amount;
-
-                if (expense.checked) {
-                    totalCheckedAmount += expense.amount;
-                }
+                if (expense.checked) totalCheckedAmount += expense.amount;
             });
 
             document.getElementById('totalAmount').textContent = totalAmount.toFixed(0);
@@ -277,19 +482,20 @@
         }
 
         function toggleCheck(index) {
-            let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            const expenses = getExpenses(currentList);
             expenses[index].checked = !expenses[index].checked;
-            localStorage.setItem('expenses', JSON.stringify(expenses));
+            saveExpenses(currentList, expenses);
             loadExpenses();
         }
 
         function clearAll() {
-            if (confirm("Are you sure you want to clear all expenses?")) {
-                localStorage.removeItem('expenses');
+            if (confirm("Are you sure you want to clear all expenses in this list?")) {
+                saveExpenses(currentList, []);
                 loadExpenses();
             }
         }
 
+        /* ---------- Drag & drop reorder ---------- */
         function dragStart(event, index) {
             dragIndex = index;
             event.dataTransfer.setData("text", index);
@@ -303,11 +509,11 @@
             event.preventDefault();
             if (dragIndex === index) return;
 
-            let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
-            const draggedExpense = expenses[dragIndex];
+            const expenses = getExpenses(currentList);
+            const dragged = expenses[dragIndex];
             expenses.splice(dragIndex, 1);
-            expenses.splice(index, 0, draggedExpense);
-            localStorage.setItem('expenses', JSON.stringify(expenses));
+            expenses.splice(index, 0, dragged);
+            saveExpenses(currentList, expenses);
             loadExpenses();
         }
     </script>
