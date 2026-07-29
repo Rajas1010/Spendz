@@ -413,7 +413,7 @@
             const title = document.getElementById('expenseTitle').value.trim();
             const amount = parseFloat(document.getElementById('expenseAmount').value.trim());
 
-            if (!title || isNaN(amount) || amount <= 0) {
+            if (!title || isNaN(amount) || amount < 0) {
                 alert("Please enter a valid title and amount.");
                 return;
             }
