@@ -28,7 +28,7 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding-top: 20px;
+            padding: 10px 0;
             overflow: hidden;
         }
 
@@ -39,8 +39,8 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             width: 90%;
             max-width: 400px;
-            height: 87vh;      /* fallback */
-            height: 87dvh;     /* dvh shrinks when the mobile browser bar is visible */
+            height: calc(100vh - 20px);   /* fallback */
+            height: calc(100dvh - 20px);  /* fill the visible screen; dvh accounts for the browser bar */
             overflow: hidden;
         }
 
