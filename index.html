@@ -39,7 +39,8 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             width: 90%;
             max-width: 400px;
-            height: 87vh;
+            height: 85vh;      /* fallback */
+            height: 85dvh;     /* dvh shrinks when the mobile browser bar is visible */
             overflow: hidden;
         }
 
@@ -48,6 +49,7 @@
             position: absolute;
             inset: 0;
             padding: 20px;
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
             display: flex;
             flex-direction: column;
             min-height: 0;
@@ -231,18 +233,36 @@
         .total-amount-container {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-end;
             padding-top: 14px;
             margin-top: 10px;
             border-top: 1px solid #dfe8e2;
             flex-shrink: 0;
         }
-        .total-amount h2, .total-amount-large h2 {
-            font-size: 0.95em;
+        .total-block { display: flex; flex-direction: column; gap: 3px; }
+        .total-block.right { text-align: right; }
+
+        .total-label {
+            font-size: 0.7em;
+            font-weight: bold;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+            color: #9aa39c;
+        }
+        .total-value { line-height: 1; }
+
+        /* Marked = smaller, muted orange accent */
+        .total-marked .total-value {
+            font-size: 1.05em;
+            font-weight: bold;
+            color: var(--orange);
+        }
+        /* Total = larger, strong green (the primary figure) */
+        .total-all .total-value {
+            font-size: 1.6em;
+            font-weight: 800;
             color: var(--green);
         }
-        .total-amount { text-align: left; }
-        .total-amount-large { text-align: right; }
 
         /* ---------- Custom dialogs / action sheet ---------- */
         .overlay {
@@ -373,11 +393,13 @@
             <div class="expense-list" id="expenseList"></div>
 
             <div class="total-amount-container">
-                <div class="total-amount">
-                    <h2>Marked: &#8377; <span id="totalMarkedAmount">0</span></h2>
+                <div class="total-block total-marked">
+                    <span class="total-label">Marked</span>
+                    <span class="total-value">&#8377;<span id="totalMarkedAmount">0</span></span>
                 </div>
-                <div class="total-amount-large">
-                    <h2>Total: &#8377; <span id="totalAmount">0</span></h2>
+                <div class="total-block total-all right">
+                    <span class="total-label">Total</span>
+                    <span class="total-value">&#8377;<span id="totalAmount">0</span></span>
                 </div>
             </div>
         </div>
