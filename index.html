@@ -2,16 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- viewport-fit + no forced max-scale; inputs use 16px so mobile never auto-zooms -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>SpendZ</title>
     <link rel="icon" type="image/png" href="exp.png">
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --green: #7c9d56;
+            --green-dark: #6a8c4c;
+            --panel: #f1f7f4;
+            --card: #ffffff;
+            --red: #ff6f61;
+            --red-dark: #e65c4b;
+            --orange: #ffa500;
         }
+
+        html, body { height: 100%; }
 
         body {
             font-family: Arial, sans-serif;
@@ -19,196 +28,191 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            height: 100vh;
             padding-top: 20px;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         .app-container {
-            background-color: #f1f7f4;
+            position: relative;
+            background-color: var(--panel);
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             width: 90%;
             max-width: 400px;
-            padding: 20px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 0px;
-            max-height: 87vh;
+            height: 87vh;
             overflow: hidden;
         }
 
-        /* ---------- Views ---------- */
-        .view { display: none; flex-direction: column; height: 100%; }
-        .view.active { display: flex; }
-
-        /* ---------- Home page ---------- */
-        .app-title {
-            color: #7c9d56;
-            margin-bottom: 15px;
+        /* ---------- Sliding views (iOS-style push) ---------- */
+        .view {
+            position: absolute;
+            inset: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            background-color: var(--panel);
+            transition: transform .38s cubic-bezier(.32, .72, 0, 1);
+            will-change: transform;
         }
 
+        .app-container.show-home    #homeView    { transform: translateX(0); }
+        .app-container.show-home    #expenseView { transform: translateX(100%); }
+        .app-container.show-expense #homeView    { transform: translateX(-25%); }
+        .app-container.show-expense #expenseView { transform: translateX(0); }
+
+        /* Press feedback on every tappable control */
+        button { transition: transform .12s ease, background-color .2s ease; }
+        button:active { transform: scale(.95); }
+
+        /* ---------- Home page ---------- */
+        .app-title { color: var(--green); margin-bottom: 15px; flex-shrink: 0; }
+
         .lists-container {
-            flex-grow: 1;
+            flex: 1 1 auto;
+            min-height: 0;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 10px;
             margin-bottom: 15px;
-            max-height: calc(90vh - 160px);
         }
 
         .list-item {
-            background-color: #ffffff;
-            padding: 12px 14px;
-            border-radius: 6px;
+            background-color: var(--card);
+            padding: 14px;
+            border-radius: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .list-item .list-name {
-            flex-grow: 1;
-            text-align: left;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
             cursor: pointer;
-            font-weight: bold;
-            color: #333;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: transform .12s ease, box-shadow .2s ease;
         }
+        .list-item:active { transform: scale(.97); }
 
-        .list-item .list-total {
-            color: #7c9d56;
-            margin: 0 10px;
-            white-space: nowrap;
-        }
+        .list-item .list-name { flex-grow: 1; text-align: left; font-weight: bold; color: #333; }
+        .list-item .list-total { color: var(--green); margin-left: 10px; white-space: nowrap; font-weight: bold; }
 
-        .empty-msg {
-            color: #999;
-            margin-top: 20px;
-        }
+        .empty-msg { color: #999; margin-top: 20px; }
 
         .add-list-btn {
-            background-color: #7c9d56;
+            background-color: var(--green);
             color: white;
             border: none;
-            padding: 12px;
+            padding: 14px;
             width: 100%;
-            border-radius: 6px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 1em;
+            font-size: 16px;
+            flex-shrink: 0;
         }
-
-        .add-list-btn:hover { background-color: #6a8c4c; }
+        .add-list-btn:hover { background-color: var(--green-dark); }
 
         /* ---------- Expense page ---------- */
         .header {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
+            flex-shrink: 0;
         }
 
         .back-btn {
-            background-color: #7c9d56;
+            background-color: var(--green);
             color: white;
             border: none;
             padding: 8px 12px;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 5px;
-            font-size: 0.9em;
+            gap: 6px;
+            font-size: 14px;
         }
+        .back-btn:hover { background-color: var(--green-dark); }
+        .back-btn .arrow { font-size: 1.15em; line-height: 1; }
 
-        .back-btn:hover { background-color: #6a8c4c; }
+        .spacer { flex-grow: 1; }
 
-        .back-btn .arrow { font-size: 1.1em; line-height: 1; }
+        /* small clear-all pill in the top-right corner */
+        .clear-btn {
+            background-color: var(--red);
+            color: white;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .clear-btn:hover { background-color: var(--red-dark); }
 
+        /* heading sits below the header row now */
         .current-list-name {
-            flex-grow: 1;
-            text-align: right;
-            color: #7c9d56;
-            font-size: 1.1em;
+            color: var(--green);
+            font-size: 1.4em;
             font-weight: bold;
+            text-align: center;
+            margin-bottom: 14px;
+            flex-shrink: 0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .clear-btn {
-            background-color: #7c9d56;
-            color: white;
-            border: none;
-            padding: 10px;
-            width: 100%;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-bottom: 15px;
-        }
-
-        .clear-btn:hover { background-color: #6a8c4c; }
-
         .expense-form {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             justify-content: center;
+            flex-shrink: 0;
         }
-
         .expense-form input {
             padding: 10px;
             border: 2px solid #ddd;
-            border-radius: 6px;
+            border-radius: 8px;
             width: 40%;
+            font-size: 16px; /* prevents iOS auto-zoom */
         }
-
         .add-btn {
-            background-color: #7c9d56;
+            background-color: var(--green);
             color: white;
             border: none;
             padding: 10px 15px;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
+            font-size: 15px;
         }
+        .add-btn:hover { background-color: var(--green-dark); }
 
-        .add-btn:hover { background-color: #6a8c4c; }
-
+        /* only this list scrolls; totals below stay fixed & visible */
         .expense-list {
-            flex-grow: 1;
+            flex: 1 1 auto;
+            min-height: 0;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-top: 20px;
-            max-height: calc(90vh - 240px);
+            padding-right: 2px;
         }
 
         .expense-item {
-            background-color: #ffffff;
+            background-color: var(--card);
             padding: 10px;
-            border-radius: 6px;
+            border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
             cursor: move;
         }
-
-        .expense-item .expense-title {
-            flex-grow: 1;
-            text-align: left;
-        }
-
-        .expense-item .expense-amount {
-            width: 120px;
-            text-align: right;
-        }
+        .expense-item .expense-title { flex-grow: 1; text-align: left; }
+        .expense-item .expense-amount { width: 110px; text-align: right; }
 
         .delete-btn, .edit-btn {
-            background-color: #ff6f61;
+            background-color: var(--red);
             color: white;
             border: none;
             padding: 5px 10px;
@@ -216,47 +220,133 @@
             cursor: pointer;
             margin-left: 5px;
         }
-
-        .edit-btn { background-color: #ffa500; }
+        .edit-btn { background-color: var(--orange); }
         .edit-btn:hover { background-color: #e68900; }
-        .delete-btn:hover { background-color: #e65c4b; }
+        .delete-btn:hover { background-color: var(--red-dark); }
 
+        .buttons-container { display: flex; justify-content: flex-end; gap: 6px; }
+        .checkbox { margin-right: 10px; transform: scale(1.15); }
+
+        /* totals bar pinned to the bottom of the page */
         .total-amount-container {
             display: flex;
             justify-content: space-between;
-            margin-top: 20px;
-            width: 100%;
+            align-items: center;
+            padding-top: 14px;
+            margin-top: 10px;
+            border-top: 1px solid #dfe8e2;
+            flex-shrink: 0;
         }
-
-        .total-amount {
-            font-size: 0.6em;
-            color: #7c9d56;
-            text-align: left;
+        .total-amount h2, .total-amount-large h2 {
+            font-size: 0.95em;
+            color: var(--green);
         }
+        .total-amount { text-align: left; }
+        .total-amount-large { text-align: right; }
 
-        .total-amount-large {
-            font-size: 0.6em;
-            color: #7c9d56;
-            text-align: right;
-        }
-
-        .buttons-container {
+        /* ---------- Custom dialogs / action sheet ---------- */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
             display: flex;
-            justify-content: flex-end;
-            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s ease;
+            z-index: 50;
         }
+        .overlay.open { opacity: 1; pointer-events: auto; }
 
-        .expense-item span { display: inline-block; }
+        /* centered dialog (alert / confirm / prompt) */
+        .dialog {
+            background: #fff;
+            width: 82%;
+            max-width: 320px;
+            border-radius: 16px;
+            padding: 22px 20px 16px;
+            text-align: center;
+            transform: scale(.85);
+            opacity: 0;
+            transition: transform .28s cubic-bezier(.32,.72,0,1), opacity .28s ease;
+        }
+        .overlay.open .dialog { transform: scale(1); opacity: 1; }
 
-        .checkbox { margin-right: 10px; }
+        .dialog h3 { color: #333; margin-bottom: 8px; font-size: 1.15em; }
+        .dialog p { color: #666; font-size: .92em; margin-bottom: 16px; line-height: 1.4; }
+        .dialog input {
+            width: 100%;
+            padding: 11px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+        .dialog-buttons { display: flex; gap: 10px; }
+        .dialog-buttons button {
+            flex: 1;
+            padding: 11px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            color: #fff;
+        }
+        .btn-cancel { background: #c7cdc9; color: #333 !important; }
+        .btn-cancel:hover { background: #b8beba; }
+        .btn-ok { background: var(--green); }
+        .btn-ok:hover { background: var(--green-dark); }
+        .btn-danger { background: var(--red); }
+        .btn-danger:hover { background: var(--red-dark); }
+
+        /* iOS-style action sheet (long press) */
+        .sheet {
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transform: translateY(120%);
+            transition: transform .35s cubic-bezier(.32,.72,0,1);
+        }
+        .overlay.open .sheet { transform: translateY(0); }
+
+        .sheet-group { background: #fff; border-radius: 14px; overflow: hidden; }
+        .sheet-title { padding: 14px; color: #888; font-size: .85em; border-bottom: 1px solid #eee; }
+        .sheet-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            background: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            color: var(--green);
+        }
+        .sheet-btn:not(:last-child) { border-bottom: 1px solid #eee; }
+        .sheet-btn.danger { color: var(--red); }
+        .sheet-btn:active { background: #f2f2f2; }
+        .sheet-cancel {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            background: #fff;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #333;
+        }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
+    <div class="app-container show-home" id="appContainer">
 
         <!-- ============ HOME / LISTS VIEW ============ -->
-        <div id="homeView" class="view active">
+        <div id="homeView" class="view">
             <h1 class="app-title">SpendZ</h1>
             <div class="lists-container" id="listsContainer"></div>
             <button class="add-list-btn" onclick="addList()">+ Add New List</button>
@@ -266,82 +356,151 @@
         <div id="expenseView" class="view">
             <div class="header">
                 <button class="back-btn" onclick="goHome()">
-                    <span class="arrow">&#8592;</span> Back to Lists
+                    <span class="arrow">&#8592;</span> Back
                 </button>
-                <span class="current-list-name" id="currentListName"></span>
+                <span class="spacer"></span>
+                <button class="clear-btn" onclick="clearAll()">Clear All</button>
             </div>
 
-            <button class="clear-btn" onclick="clearAll()">Clear All</button>
+            <div class="current-list-name" id="currentListName"></div>
 
             <div class="expense-form">
                 <input type="text" id="expenseTitle" placeholder="Expense Title" />
                 <input type="number" id="expenseAmount" placeholder="Amount" />
-                <button class="add-btn" onclick="addExpense()">Add Expense</button>
+                <button class="add-btn" onclick="addExpense()">Add</button>
             </div>
 
             <div class="expense-list" id="expenseList"></div>
 
             <div class="total-amount-container">
                 <div class="total-amount">
-                    <h2>Total Marked: &#8377; <span id="totalMarkedAmount">0</span></h2>
+                    <h2>Marked: &#8377; <span id="totalMarkedAmount">0</span></h2>
                 </div>
                 <div class="total-amount-large">
-                    <h2>Total All: &#8377; <span id="totalAmount">0</span></h2>
+                    <h2>Total: &#8377; <span id="totalAmount">0</span></h2>
                 </div>
             </div>
         </div>
 
     </div>
 
+    <!-- Custom dialog overlay -->
+    <div class="overlay" id="dialogOverlay">
+        <div class="dialog" id="dialogBox"></div>
+    </div>
+
+    <!-- Action sheet overlay -->
+    <div class="overlay" id="sheetOverlay">
+        <div class="sheet" id="sheetBox"></div>
+    </div>
+
     <script>
         let dragIndex = -1;
-        let currentList = null; // name of the list currently open
+        let currentList = null;
 
         /* ---------- Storage helpers ---------- */
-        // Index of list names is kept in "expenseLists".
-        // Each list's expenses are stored separately under "expenses_<name>".
+        const getLists   = () => JSON.parse(localStorage.getItem('expenseLists')) || [];
+        const saveLists  = (l) => localStorage.setItem('expenseLists', JSON.stringify(l));
+        const listKey    = (n) => 'expenses_' + n;
+        const getExpenses  = (n) => JSON.parse(localStorage.getItem(listKey(n))) || [];
+        const saveExpenses = (n, e) => localStorage.setItem(listKey(n), JSON.stringify(e));
 
-        function getLists() {
-            return JSON.parse(localStorage.getItem('expenseLists')) || [];
+        /* ---------- Custom dialogs (replace native alert/confirm/prompt) ---------- */
+        const overlay = document.getElementById('dialogOverlay');
+        const dialog  = document.getElementById('dialogBox');
+
+        function closeDialog() { overlay.classList.remove('open'); }
+
+        function customAlert(message, title = 'Notice') {
+            return new Promise(resolve => {
+                dialog.innerHTML = `
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                    <div class="dialog-buttons">
+                        <button class="btn-ok" id="dlgOk">OK</button>
+                    </div>`;
+                overlay.classList.add('open');
+                dialog.querySelector('#dlgOk').onclick = () => { closeDialog(); resolve(); };
+            });
         }
 
-        function saveLists(lists) {
-            localStorage.setItem('expenseLists', JSON.stringify(lists));
+        function customConfirm(message, title = 'Confirm', danger = false) {
+            return new Promise(resolve => {
+                dialog.innerHTML = `
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                    <div class="dialog-buttons">
+                        <button class="btn-cancel" id="dlgCancel">Cancel</button>
+                        <button class="${danger ? 'btn-danger' : 'btn-ok'}" id="dlgOk">Yes</button>
+                    </div>`;
+                overlay.classList.add('open');
+                dialog.querySelector('#dlgCancel').onclick = () => { closeDialog(); resolve(false); };
+                dialog.querySelector('#dlgOk').onclick     = () => { closeDialog(); resolve(true); };
+            });
         }
 
-        function listKey(name) {
-            return 'expenses_' + name;
+        function customPrompt(message, title = 'Enter', value = '') {
+            return new Promise(resolve => {
+                dialog.innerHTML = `
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                    <input type="text" id="dlgInput" value="${value.replace(/"/g, '&quot;')}" />
+                    <div class="dialog-buttons">
+                        <button class="btn-cancel" id="dlgCancel">Cancel</button>
+                        <button class="btn-ok" id="dlgOk">Save</button>
+                    </div>`;
+                overlay.classList.add('open');
+                const input = dialog.querySelector('#dlgInput');
+                setTimeout(() => input.focus(), 200);
+                const done = (val) => { closeDialog(); resolve(val); };
+                dialog.querySelector('#dlgCancel').onclick = () => done(null);
+                dialog.querySelector('#dlgOk').onclick     = () => done(input.value);
+                input.onkeydown = (e) => { if (e.key === 'Enter') done(input.value); };
+            });
         }
 
-        function getExpenses(name) {
-            return JSON.parse(localStorage.getItem(listKey(name))) || [];
+        /* ---------- Action sheet (long-press edit / delete) ---------- */
+        const sheetOverlay = document.getElementById('sheetOverlay');
+        const sheetBox     = document.getElementById('sheetBox');
+
+        function closeSheet() { sheetOverlay.classList.remove('open'); }
+
+        function openActionSheet(name, index) {
+            sheetBox.innerHTML = `
+                <div class="sheet-group">
+                    <div class="sheet-title">${name}</div>
+                    <button class="sheet-btn" id="sheetEdit">Edit Name</button>
+                    <button class="sheet-btn danger" id="sheetDelete">Delete List</button>
+                </div>
+                <button class="sheet-cancel" id="sheetCancel">Cancel</button>`;
+            sheetOverlay.classList.add('open');
+
+            sheetBox.querySelector('#sheetCancel').onclick = closeSheet;
+            sheetBox.querySelector('#sheetEdit').onclick   = () => { closeSheet(); renameList(index); };
+            sheetBox.querySelector('#sheetDelete').onclick = () => { closeSheet(); deleteList(index); };
         }
 
-        function saveExpenses(name, expenses) {
-            localStorage.setItem(listKey(name), JSON.stringify(expenses));
-        }
+        // tap outside the sheet/dialog closes it
+        sheetOverlay.onclick  = (e) => { if (e.target === sheetOverlay) closeSheet(); };
+        overlay.onclick       = (e) => { if (e.target === overlay) closeDialog(); };
 
         /* ---------- View switching ---------- */
-        document.addEventListener('DOMContentLoaded', () => {
-            loadLists();
-        });
-
-        function showView(id) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
+        const appContainer = document.getElementById('appContainer');
+        document.addEventListener('DOMContentLoaded', loadLists);
 
         function goHome() {
-            currentList = null;
-            loadLists();
-            showView('homeView');
+            appContainer.classList.remove('show-expense');
+            appContainer.classList.add('show-home');
+            // reload lists after the slide finishes so totals refresh
+            setTimeout(() => { currentList = null; loadLists(); }, 250);
         }
 
         function openList(name) {
             currentList = name;
             document.getElementById('currentListName').textContent = name;
-            showView('expenseView');
             loadExpenses();
+            appContainer.classList.remove('show-home');
+            appContainer.classList.add('show-expense');
         }
 
         /* ---------- Home page logic ---------- */
@@ -356,86 +515,126 @@
             }
 
             lists.forEach((name, index) => {
-                const expenses = getExpenses(name);
-                const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+                const total = getExpenses(name).reduce((s, e) => s + e.amount, 0);
 
                 const item = document.createElement('div');
                 item.classList.add('list-item');
                 item.innerHTML = `
                     <span class="list-name">${name}</span>
-                    <span class="list-total">&#8377;${total.toFixed(0)}</span>
-                    <button class="delete-btn" onclick="deleteList(${index})">Delete</button>
-                `;
-                // Open list when the name is clicked
-                item.querySelector('.list-name').addEventListener('click', () => openList(name));
+                    <span class="list-total">&#8377;${total.toFixed(0)}</span>`;
+
+                // ----- long press handling (touch + desktop) -----
+                let pressTimer = null;
+                let longPressed = false;
+
+                const startPress = () => {
+                    longPressed = false;
+                    pressTimer = setTimeout(() => {
+                        longPressed = true;
+                        if (navigator.vibrate) navigator.vibrate(30);
+                        openActionSheet(name, index);
+                    }, 500);
+                };
+                const cancelPress = () => clearTimeout(pressTimer);
+
+                item.addEventListener('touchstart', startPress, { passive: true });
+                item.addEventListener('touchend', cancelPress);
+                item.addEventListener('touchmove', cancelPress, { passive: true });
+                item.addEventListener('mousedown', startPress);
+                item.addEventListener('mouseup', cancelPress);
+                item.addEventListener('mouseleave', cancelPress);
+                item.addEventListener('contextmenu', (e) => { e.preventDefault(); cancelPress(); openActionSheet(name, index); });
+
+                item.addEventListener('click', () => {
+                    if (longPressed) { longPressed = false; return; }
+                    openList(name);
+                });
+
                 container.appendChild(item);
             });
         }
 
-        function addList() {
-            let name = prompt("Enter a name for the new list:");
-            if (name === null) return; // cancelled
+        async function addList() {
+            let name = await customPrompt('Enter a name for the new list:', 'New List');
+            if (name === null) return;
             name = name.trim();
 
-            if (!name) {
-                alert("Please enter a valid list name.");
-                return;
-            }
+            if (!name) { await customAlert('Please enter a valid list name.'); return; }
 
             const lists = getLists();
-            if (lists.includes(name)) {
-                alert("A list with that name already exists.");
-                return;
-            }
+            if (lists.includes(name)) { await customAlert('A list with that name already exists.'); return; }
 
             lists.push(name);
             saveLists(lists);
-            saveExpenses(name, []); // initialise empty list
-
-            openList(name); // navigate straight to the new list
+            saveExpenses(name, []);
+            openList(name);
         }
 
-        function deleteList(index) {
+        async function renameList(index) {
+            const lists = getLists();
+            const oldName = lists[index];
+            let newName = await customPrompt('Rename this list:', 'Edit List', oldName);
+            if (newName === null) return;
+            newName = newName.trim();
+
+            if (!newName) { await customAlert('Please enter a valid list name.'); return; }
+            if (newName === oldName) return;
+            if (lists.includes(newName)) { await customAlert('A list with that name already exists.'); return; }
+
+            // move the stored expenses to the new key
+            const data = getExpenses(oldName);
+            localStorage.removeItem(listKey(oldName));
+            saveExpenses(newName, data);
+            lists[index] = newName;
+            saveLists(lists);
+            loadLists();
+        }
+
+        async function deleteList(index) {
             const lists = getLists();
             const name = lists[index];
-            if (confirm(`Delete the list "${name}" and all its expenses?`)) {
-                localStorage.removeItem(listKey(name));
-                lists.splice(index, 1);
-                saveLists(lists);
-                loadLists();
-            }
+            const ok = await customConfirm(`Delete "${name}" and all its expenses?`, 'Delete List', true);
+            if (!ok) return;
+            localStorage.removeItem(listKey(name));
+            lists.splice(index, 1);
+            saveLists(lists);
+            loadLists();
         }
 
-        /* ---------- Expense page logic (per current list) ---------- */
-        function addExpense() {
+        /* ---------- Expense page logic ---------- */
+        async function addExpense() {
             if (!currentList) return;
-
-            const title = document.getElementById('expenseTitle').value.trim();
-            const amount = parseFloat(document.getElementById('expenseAmount').value.trim());
+            const titleEl = document.getElementById('expenseTitle');
+            const amountEl = document.getElementById('expenseAmount');
+            const title = titleEl.value.trim();
+            const amount = parseFloat(amountEl.value.trim());
 
             if (!title || isNaN(amount) || amount < 0) {
-                alert("Please enter a valid title and amount.");
+                await customAlert('Please enter a valid title and amount.');
                 return;
             }
 
-            const expense = { title: title, amount: amount, checked: false };
-
             const expenses = getExpenses(currentList);
-            expenses.push(expense);
+            expenses.push({ title, amount, checked: false });
             saveExpenses(currentList, expenses);
 
-            document.getElementById('expenseTitle').value = '';
-            document.getElementById('expenseAmount').value = '';
+            titleEl.value = '';
+            amountEl.value = '';
+            // drop focus so the mobile keyboard closes & the page zooms back out
+            titleEl.blur();
+            amountEl.blur();
+            if (document.activeElement) document.activeElement.blur();
+
             loadExpenses();
         }
 
-        function deleteExpense(index) {
-            if (confirm("Are you sure you want to delete this expense?")) {
-                const expenses = getExpenses(currentList);
-                expenses.splice(index, 1);
-                saveExpenses(currentList, expenses);
-                loadExpenses();
-            }
+        async function deleteExpense(index) {
+            const ok = await customConfirm('Delete this expense?', 'Delete', true);
+            if (!ok) return;
+            const expenses = getExpenses(currentList);
+            expenses.splice(index, 1);
+            saveExpenses(currentList, expenses);
+            loadExpenses();
         }
 
         function editExpense(index) {
@@ -449,29 +648,27 @@
         }
 
         function loadExpenses() {
-            const expenseListContainer = document.getElementById('expenseList');
+            const container = document.getElementById('expenseList');
             const expenses = getExpenses(currentList);
-            expenseListContainer.innerHTML = '';
-            let totalAmount = 0;
-            let totalCheckedAmount = 0;
+            container.innerHTML = '';
+            let totalAmount = 0, totalCheckedAmount = 0;
 
             expenses.forEach((expense, index) => {
-                const expenseItem = document.createElement('div');
-                expenseItem.classList.add('expense-item');
-                expenseItem.setAttribute('draggable', true);
-                expenseItem.setAttribute('ondragstart', `dragStart(event, ${index})`);
-                expenseItem.setAttribute('ondragover', 'dragOver(event)');
-                expenseItem.setAttribute('ondrop', `drop(event, ${index})`);
-                expenseItem.innerHTML = `
+                const el = document.createElement('div');
+                el.classList.add('expense-item');
+                el.setAttribute('draggable', true);
+                el.setAttribute('ondragstart', `dragStart(event, ${index})`);
+                el.setAttribute('ondragover', 'dragOver(event)');
+                el.setAttribute('ondrop', `drop(event, ${index})`);
+                el.innerHTML = `
                     <input type="checkbox" class="checkbox" ${expense.checked ? 'checked' : ''} onclick="toggleCheck(${index})">
                     <span class="expense-title">${expense.title}</span>
                     <span class="expense-amount">&#8377;${expense.amount.toFixed(2)}</span>
                     <div class="buttons-container">
                         <button class="edit-btn" onclick="editExpense(${index})">Edit</button>
                         <button class="delete-btn" onclick="deleteExpense(${index})">Delete</button>
-                    </div>
-                `;
-                expenseListContainer.appendChild(expenseItem);
+                    </div>`;
+                container.appendChild(el);
 
                 totalAmount += expense.amount;
                 if (expense.checked) totalCheckedAmount += expense.amount;
@@ -488,27 +685,19 @@
             loadExpenses();
         }
 
-        function clearAll() {
-            if (confirm("Are you sure you want to clear all expenses in this list?")) {
-                saveExpenses(currentList, []);
-                loadExpenses();
-            }
+        async function clearAll() {
+            const ok = await customConfirm('Clear all expenses in this list?', 'Clear All', true);
+            if (!ok) return;
+            saveExpenses(currentList, []);
+            loadExpenses();
         }
 
         /* ---------- Drag & drop reorder ---------- */
-        function dragStart(event, index) {
-            dragIndex = index;
-            event.dataTransfer.setData("text", index);
-        }
-
-        function dragOver(event) {
-            event.preventDefault();
-        }
-
+        function dragStart(event, index) { dragIndex = index; event.dataTransfer.setData('text', index); }
+        function dragOver(event) { event.preventDefault(); }
         function drop(event, index) {
             event.preventDefault();
             if (dragIndex === index) return;
-
             const expenses = getExpenses(currentList);
             const dragged = expenses[dragIndex];
             expenses.splice(dragIndex, 1);
