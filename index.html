@@ -68,7 +68,76 @@
         button:active { transform: scale(.95); }
 
         /* ---------- Home page ---------- */
-        .app-title { color: var(--green); margin-bottom: 15px; flex-shrink: 0; }
+        /* home header with title + options menu */
+        .home-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            flex-shrink: 0;
+        }
+        .app-title { color: var(--green); margin: 0; }
+
+        .menu-btn {
+            background-color: var(--green);
+            color: #fff;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            font-size: 22px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .menu-btn:hover { background-color: var(--green-dark); }
+
+        /* backdrop that closes the menu on outside tap */
+        .menu-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 15;
+            display: none;
+        }
+        .menu-backdrop.open { display: block; }
+
+        /* the dropdown options menu */
+        .home-menu {
+            position: absolute;
+            top: 66px;
+            right: 20px;
+            min-width: 190px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            z-index: 20;
+            opacity: 0;
+            transform: translateY(-8px) scale(.98);
+            transform-origin: top right;
+            pointer-events: none;
+            transition: opacity .18s ease, transform .18s ease;
+        }
+        .home-menu.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+        .home-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 14px 16px;
+            border: none;
+            background: #fff;
+            font-size: 15px;
+            cursor: pointer;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .home-menu button:not(:last-child) { border-bottom: 1px solid #eee; }
+        .home-menu button:active { background: #f2f2f2; }
+        .home-menu .menu-icon { font-size: 16px; width: 18px; text-align: center; }
+        .home-menu .danger { color: var(--red); }
 
         .lists-container {
             flex: 1 1 auto;
@@ -376,7 +445,21 @@
 
         <!-- ============ HOME / LISTS VIEW ============ -->
         <div id="homeView" class="view">
-            <h1 class="app-title">SpendZ</h1>
+            <div class="menu-backdrop" id="menuBackdrop" onclick="closeHomeMenu()"></div>
+
+            <div class="home-header">
+                <h1 class="app-title">SpendZ</h1>
+                <button class="menu-btn" onclick="toggleHomeMenu(event)" title="Options">&#8942;</button>
+            </div>
+
+            <div class="home-menu" id="homeMenu">
+                <button onclick="triggerImport()"><span class="menu-icon">&#8681;</span> Import CSV</button>
+                <button onclick="exportCSV()"><span class="menu-icon">&#8679;</span> Export CSV</button>
+                <button class="danger" onclick="clearAllLists()"><span class="menu-icon">&#128465;</span> Clear All Lists</button>
+            </div>
+
+            <input type="file" id="importFile" accept=".csv,text/csv" style="display:none" onchange="handleImportFile(event)" />
+
             <div class="lists-container" id="listsContainer"></div>
             <button class="add-list-btn" onclick="addList()">+ Add New List</button>
         </div>
@@ -631,6 +714,133 @@
             localStorage.removeItem(listKey(name));
             lists.splice(index, 1);
             saveLists(lists);
+            loadLists();
+        }
+
+        /* ---------- Home options menu (Import / Export / Clear all) ---------- */
+        function toggleHomeMenu(e) {
+            e.stopPropagation();
+            document.getElementById('homeMenu').classList.toggle('open');
+            document.getElementById('menuBackdrop').classList.toggle('open');
+        }
+        function closeHomeMenu() {
+            document.getElementById('homeMenu').classList.remove('open');
+            document.getElementById('menuBackdrop').classList.remove('open');
+        }
+
+        // CSV helpers
+        function escapeCSV(val) {
+            val = String(val);
+            return /[",\n]/.test(val) ? '"' + val.replace(/"/g, '""') + '"' : val;
+        }
+        function parseCSVLine(line) {
+            const out = [];
+            let cur = '', inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (inQuotes) {
+                    if (ch === '"') {
+                        if (line[i + 1] === '"') { cur += '"'; i++; }
+                        else inQuotes = false;
+                    } else cur += ch;
+                } else {
+                    if (ch === '"') inQuotes = true;
+                    else if (ch === ',') { out.push(cur); cur = ''; }
+                    else cur += ch;
+                }
+            }
+            out.push(cur);
+            return out;
+        }
+
+        async function exportCSV() {
+            closeHomeMenu();
+            const lists = getLists();
+            if (lists.length === 0) { await customAlert('There are no lists to export.'); return; }
+
+            const rows = ['List,Title,Amount,Checked'];
+            lists.forEach(name => {
+                const expenses = getExpenses(name);
+                if (expenses.length === 0) {
+                    rows.push([escapeCSV(name), '', '', ''].join(','));   // preserve empty list
+                } else {
+                    expenses.forEach(e => {
+                        rows.push([escapeCSV(name), escapeCSV(e.title), e.amount, e.checked ? '1' : '0'].join(','));
+                    });
+                }
+            });
+
+            const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'spendz_' + new Date().toISOString().slice(0, 10) + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function triggerImport() {
+            closeHomeMenu();
+            document.getElementById('importFile').click();
+        }
+
+        async function handleImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const text = await file.text();
+            event.target.value = '';   // allow re-importing the same file later
+
+            const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+            if (lines.length === 0) { await customAlert('That file is empty.'); return; }
+
+            let start = 0;
+            const header = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase());
+            if (header[0] === 'list') start = 1;   // skip header row if present
+
+            const grouped = {};
+            for (let i = start; i < lines.length; i++) {
+                const cols = parseCSVLine(lines[i]);
+                const listName = (cols[0] || '').trim();
+                if (!listName) continue;
+                if (!grouped[listName]) grouped[listName] = [];   // declares the list (even if empty)
+                const title = (cols[1] || '').trim();
+                if (title === '') continue;
+                const amount = parseFloat(cols[2]);
+                const flag = (cols[3] || '').trim().toLowerCase();
+                grouped[listName].push({
+                    title,
+                    amount: isNaN(amount) ? 0 : amount,
+                    checked: flag === '1' || flag === 'true' || flag === 'yes'
+                });
+            }
+
+            const names = Object.keys(grouped);
+            if (names.length === 0) { await customAlert('No valid rows were found in that file.'); return; }
+
+            const ok = await customConfirm(
+                `Import ${names.length} list(s)? Any list with a matching name will be replaced; other lists are kept.`,
+                'Import CSV'
+            );
+            if (!ok) return;
+
+            const lists = getLists();
+            names.forEach(name => {
+                saveExpenses(name, grouped[name]);
+                if (!lists.includes(name)) lists.push(name);
+            });
+            saveLists(lists);
+            loadLists();
+            await customAlert('Import complete.');
+        }
+
+        async function clearAllLists() {
+            closeHomeMenu();
+            const ok = await customConfirm('Delete ALL lists and every expense in them? This cannot be undone.', 'Clear All Lists', true);
+            if (!ok) return;
+            getLists().forEach(name => localStorage.removeItem(listKey(name)));
+            localStorage.removeItem('expenseLists');
             loadLists();
         }
 
