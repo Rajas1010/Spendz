@@ -169,15 +169,42 @@
             gap: 10px;
             margin-bottom: 12px;
             justify-content: center;
+            align-items: center;
             flex-shrink: 0;
         }
         .expense-form input {
             padding: 10px;
             border: 2px solid #ddd;
             border-radius: 8px;
-            width: 40%;
             font-size: 16px; /* prevents iOS auto-zoom */
         }
+        #expenseTitle { width: 40%; }
+
+        /* amount field + inline "add to existing" button */
+        .amount-wrap { position: relative; width: 40%; }
+        .amount-wrap input { width: 100%; padding-right: 38px; }
+        .plus-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border: none;
+            border-radius: 6px;
+            background-color: var(--orange);
+            color: #fff;
+            font-size: 20px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .plus-btn:hover { background-color: #e68900; }
+        .plus-btn:active { transform: translateY(-50%) scale(.88); }
+
         .add-btn {
             background-color: var(--green);
             color: white;
@@ -368,7 +395,10 @@
 
             <div class="expense-form">
                 <input type="text" id="expenseTitle" placeholder="Expense Title" />
-                <input type="number" id="expenseAmount" placeholder="Amount" />
+                <div class="amount-wrap">
+                    <input type="number" id="expenseAmount" placeholder="Amount" />
+                    <button type="button" class="plus-btn" id="plusBtn" onclick="accumulateAmount()" title="Add to the amount already entered">+</button>
+                </div>
                 <button class="add-btn" onclick="addExpense()">Add</button>
             </div>
 
@@ -397,6 +427,7 @@
     </div>
 
     <script>
+        let pendingBase = 0;   // amount carried over from the "+" button
         let dragIndex = -1;
         let currentList = null;
 
@@ -604,12 +635,32 @@
         }
 
         /* ---------- Expense page logic ---------- */
+        function resetAmountField() {
+            pendingBase = 0;
+            const amountEl = document.getElementById('expenseAmount');
+            amountEl.value = '';
+            amountEl.placeholder = 'Amount';
+        }
+
+        // "+" button: bank the current amount, clear the box, wait for the next number
+        function accumulateAmount() {
+            const amountEl = document.getElementById('expenseAmount');
+            const v = parseFloat(amountEl.value.trim());
+            if (!isNaN(v)) pendingBase += v;
+            amountEl.value = '';
+            amountEl.placeholder = '+ \u20B9' + pendingBase;   // shows what will be added on top
+            amountEl.focus();
+        }
+
         async function addExpense() {
             if (!currentList) return;
             const titleEl = document.getElementById('expenseTitle');
             const amountEl = document.getElementById('expenseAmount');
             const title = titleEl.value.trim();
-            const amount = parseFloat(amountEl.value.trim());
+
+            const typedRaw = amountEl.value.trim();
+            const typed = typedRaw === '' ? 0 : parseFloat(typedRaw);
+            const amount = pendingBase + typed;   // add carried-over amount, if any
 
             if (!title || isNaN(amount) || amount < 0) {
                 await customAlert('Please enter a valid title and amount.');
@@ -617,11 +668,11 @@
             }
 
             const expenses = getExpenses(currentList);
-            expenses.push({ title, amount, checked: false });
+            expenses.unshift({ title, amount, checked: false });   // newest goes to the TOP
             saveExpenses(currentList, expenses);
 
             titleEl.value = '';
-            amountEl.value = '';
+            resetAmountField();
             // drop focus so the mobile keyboard closes & the page zooms back out
             titleEl.blur();
             amountEl.blur();
@@ -642,6 +693,7 @@
         function editExpense(index) {
             const expenses = getExpenses(currentList);
             const expense = expenses[index];
+            resetAmountField();   // start a clean edit
             document.getElementById('expenseTitle').value = expense.title;
             document.getElementById('expenseAmount').value = expense.amount;
             expenses.splice(index, 1);
