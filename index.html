@@ -117,6 +117,7 @@
 
         /* ---------- Rows (home + detail share look) ---------- */
         .rows-container {
+            position: relative;
             flex: 1 1 auto;
             min-height: 0;
             overflow-y: auto;
@@ -139,7 +140,12 @@
         }
         .row.folder { cursor: pointer; }
         .row.folder:active { transform: scale(.985); }
-        .row.dragging { opacity: .9; box-shadow: 0 8px 18px rgba(0,0,0,.18); }
+        .row.dragging { opacity: .97; box-shadow: 0 12px 26px rgba(0,0,0,.24); }
+        .drop-indicator {
+            position: absolute; left: 0; right: 0; height: 3px;
+            background: var(--green); border-radius: 2px;
+            pointer-events: none; z-index: 5; display: none;
+        }
 
         .row-name { flex-grow: 1; text-align: left; color: #333; font-weight: bold; }
         .row.product .row-name { font-weight: normal; }
@@ -177,12 +183,15 @@
             font-size: 16px;
         }
         .add-list-btn:hover { background-color: var(--green-dark); }
-        .home-total {
+        .home-total, .home-totals {
             display: flex; flex-direction: column; align-items: flex-end;
-            line-height: 1.1; white-space: nowrap; flex-shrink: 0;
+            line-height: 1.15; white-space: nowrap; flex-shrink: 0;
         }
-        .ht-label { font-size: .68em; color: #9aa39c; text-transform: uppercase; letter-spacing: .5px; }
-        .ht-amount { font-size: 1.15em; font-weight: bold; color: var(--green); }
+        .ht-block { display: flex; align-items: baseline; gap: 5px; }
+        .ht-label { font-size: .62em; color: #9aa39c; text-transform: uppercase; letter-spacing: .4px; }
+        .ht-amount { font-size: 1.0em; font-weight: bold; color: var(--green); }
+
+        .row.is-hidden { opacity: .5; }
 
         /* ---------- Detail page ---------- */
         .header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-shrink: 0; }
@@ -335,8 +344,9 @@
             </div>
 
             <div class="home-menu" id="homeMenu">
-                <button onclick="triggerImport()"><span class="menu-icon">&#8659;</span> Import CSV</button>
-                <button onclick="exportCSV()"><span class="menu-icon">&#8657;</span> Export CSV</button>
+                <button onclick="triggerImport()"><span class="menu-icon">&#8681;</span> Import CSV</button>
+                <button onclick="exportCSV()"><span class="menu-icon">&#8679;</span> Export CSV</button>
+                <button onclick="toggleShowHidden()"><span class="menu-icon">&#128065;</span> <span id="toggleHiddenLabel">Show hidden lists</span></button>
                 <button class="danger" onclick="clearAllLists()"><span class="menu-icon">&#128465;</span> Clear All Lists</button>
             </div>
 
@@ -345,9 +355,9 @@
             <div class="rows-container home-rows" id="homeRows"></div>
             <div class="home-footer">
                 <button class="add-list-btn" onclick="addTopList()">+ Add New List</button>
-                <div class="home-total">
-                    <span class="ht-label">Total</span>
-                    <span class="ht-amount">&#8377;<span id="homeTotalAmount">0</span></span>
+                <div class="home-totals">
+                    <div class="ht-block"><span class="ht-label">Marked</span><span class="ht-amount">&#8377;<span id="homeMarkedAmount">0</span></span></div>
+                    <div class="ht-block"><span class="ht-label">Total</span><span class="ht-amount">&#8377;<span id="homeTotalAmount">0</span></span></div>
                 </div>
             </div>
         </div>
@@ -394,7 +404,8 @@
         let tree = null;             // root { children:[...] } (root has no name/id)
         let currentPath = [];        // ids from root to the node currently open
         let pendingBase = 0;         // carried amount for the "+" button
-        let dragSrc = null;          // { parentPath, index } of the row being dragged
+        let dnd = null;              // active drag state (custom touch/mouse reorder)
+        let showHidden = false;      // reveal hidden lists (resets each load)
 
         const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
@@ -432,7 +443,7 @@
         }
         function nodeTotal(node) {
             if (node.type === 'product') return node.amount || 0;
-            return (node.children || []).reduce((s, c) => s + nodeTotal(c), 0);
+            return (node.children || []).reduce((s, c) => s + (c.hidden ? 0 : nodeTotal(c)), 0);
         }
         function formatAmount(n) { return Number.isInteger(n) ? String(n) : n.toFixed(2); }
 
@@ -468,16 +479,24 @@
             } else {
                 (function walk(parent, parentPath, depth) {
                     parent.children.forEach((node, idx) => {
-                        if (node.type !== 'list') return;   // home outline shows lists & sub-lists only
+                        if (node.type !== 'list') return;         // outline shows lists & sub-lists only
+                        if (node.hidden && !showHidden) return;   // skip hidden unless revealing
                         const path = parentPath.concat(node.id);
-                        makeRow(box, node, path, idx, { detail: false, depth: depth });
+                        makeRow(box, node, path, idx, { detail: false, depth: depth, checkbox: depth === 1 });
                         if (node.children.length) walk(node, path, depth + 1);
                     });
                 })(tree, [], 1);
                 retriggerAnim(box);
             }
-            const grand = tree.children.reduce((s, n) => s + nodeTotal(n), 0);
+            let grand = 0, marked = 0;
+            tree.children.forEach(n => {
+                if (n.hidden) return;                 // hidden lists excluded from totals
+                const amt = nodeTotal(n);
+                grand += amt;
+                if (n.checked) marked += amt;
+            });
             document.getElementById('homeTotalAmount').textContent = formatAmount(grand);
+            document.getElementById('homeMarkedAmount').textContent = formatAmount(marked);
         }
 
         async function addTopList() {
@@ -524,6 +543,7 @@
                 box.innerHTML = '<p class="empty-msg">Empty. Add a product or a sub-list above.</p>';
             } else {
                 node.children.forEach((child, index) => {
+                    if (child.type === 'list' && child.hidden && !showHidden) return;  // hidden everywhere
                     // direct child: flush left, checkbox + drag reorder
                     makeRow(box, child, currentPath.concat(child.id), index, { detail: true, depth: 1 });
                     // its own sub-lists shown indented beneath it (preview of the branch)
@@ -534,6 +554,7 @@
 
             let marked = 0, total = 0;
             node.children.forEach(c => {
+                if (c.hidden) return;
                 const amt = nodeTotal(c);
                 total += amt;
                 if (c.checked) marked += amt;
@@ -551,21 +572,14 @@
 
             const row = document.createElement('div');
             row.className = 'row ' + (isList ? 'folder' : 'product');
+            if (node.hidden) row.classList.add('is-hidden');
             if (depth > 1) row.style.marginLeft = ((depth - 1) * 16) + 'px';
             const parentPath = path.slice(0, -1);
+            row.dataset.id = node.id;
+            row.dataset.parent = JSON.stringify(parentPath);
+            attachDrag(row);
 
-            // long-press / drag to reorder within the same list
-            row.setAttribute('draggable', 'true');
-            row.addEventListener('dragstart', e => {
-                dragSrc = { parentPath: parentPath, index: index };
-                row.classList.add('dragging');
-                if (e.dataTransfer) e.dataTransfer.setData('text', '1');
-            });
-            row.addEventListener('dragend', () => row.classList.remove('dragging'));
-            row.addEventListener('dragover', e => e.preventDefault());
-            row.addEventListener('drop', e => { e.preventDefault(); reorderSiblings(dragSrc, { parentPath: parentPath, index: index }); });
-
-            if (detail) {
+            if (detail || opts.checkbox) {
                 const cb = document.createElement('input');
                 cb.type = 'checkbox'; cb.className = 'checkbox'; cb.checked = !!node.checked;
                 cb.onclick = (e) => { e.stopPropagation(); toggleCheck(path); };
@@ -603,28 +617,163 @@
         function renderSubOutline(box, parent, parentPath, depth) {
             (parent.children || []).forEach((n, idx) => {
                 if (n.type !== 'list') return;
+                if (n.hidden && !showHidden) return;
                 const path = parentPath.concat(n.id);
                 makeRow(box, n, path, idx, { detail: false, depth: depth });
                 renderSubOutline(box, n, path, depth + 1);
             });
         }
 
-        function reorderSiblings(src, dst) {
-            if (!src) return;
-            if (JSON.stringify(src.parentPath) !== JSON.stringify(dst.parentPath)) return; // same list only
-            if (src.index === dst.index) return;
-            const parent = getNodeByPath(src.parentPath);
-            const [moved] = parent.children.splice(src.index, 1);
-            parent.children.splice(dst.index, 0, moved);
+        /* ---------- Smooth reorder: custom long-press drag (touch + mouse) ---------- */
+        function attachDrag(row) {
+            row.addEventListener('touchstart', onTouchStart, { passive: true });
+            row.addEventListener('touchmove', onTouchMove, { passive: false });
+            row.addEventListener('touchend', onTouchEnd);
+            row.addEventListener('touchcancel', onTouchEnd);
+            row.addEventListener('mousedown', onMouseDown);
+        }
+
+        function fromControls(target) {
+            return target.closest('.dot-btn') || (target.classList && target.classList.contains('checkbox'));
+        }
+
+        function beginPress(row, x, y, isTouch) {
+            if (dnd) cleanupDrag();
+            dnd = {
+                row: row, draggedId: row.dataset.id, parentPath: JSON.parse(row.dataset.parent),
+                startX: x, startY: y, lastY: y, active: false, isTouch: isTouch, timer: null
+            };
+            if (isTouch) dnd.timer = setTimeout(activateDrag, 240);   // long-press to start on touch
+        }
+
+        function activateDrag() {
+            if (!dnd || dnd.active) return;
+            dnd.active = true;
+            const row = dnd.row;
+            dnd.box = row.parentElement;
+            dnd.box.style.position = 'relative';
+            const sibs = [...dnd.box.querySelectorAll('.row')]
+                .filter(r => r.dataset.parent === row.dataset.parent && r !== row);
+            dnd.others = sibs.map(el => ({ el, rect: el.getBoundingClientRect() }))
+                             .sort((a, b) => a.rect.top - b.rect.top);
+            row.classList.add('dragging');
+            row.style.transition = 'none';
+            row.style.position = 'relative';
+            row.style.zIndex = '1000';
+            dnd.indicator = document.createElement('div');
+            dnd.indicator.className = 'drop-indicator';
+            dnd.box.appendChild(dnd.indicator);
+            if (navigator.vibrate) { try { navigator.vibrate(15); } catch (_) {} }
+        }
+
+        function moveDrag(x, y) {
+            dnd.lastY = y;
+            dnd.row.style.transform = 'translateY(' + (y - dnd.startY) + 'px)';
+            const box = dnd.box, boxRect = box.getBoundingClientRect();
+            let topY = null, placed = false;
+            for (const o of dnd.others) {
+                const mid = o.rect.top + o.rect.height / 2;
+                if (y < mid) { topY = o.rect.top; placed = true; break; }
+            }
+            if (!placed && dnd.others.length) topY = dnd.others[dnd.others.length - 1].rect.bottom;
+            if (topY !== null) {
+                dnd.indicator.style.display = 'block';
+                dnd.indicator.style.top = (topY - boxRect.top + box.scrollTop - 4) + 'px';
+            } else {
+                dnd.indicator.style.display = 'none';
+            }
+        }
+
+        function commitDrag() {
+            const y = dnd.lastY;
+            let refId = null, before = true;
+            for (const o of dnd.others) {
+                const mid = o.rect.top + o.rect.height / 2;
+                if (y < mid) { refId = o.el.dataset.id; before = true; break; }
+            }
+            if (refId === null && dnd.others.length) { refId = dnd.others[dnd.others.length - 1].el.dataset.id; before = false; }
+            if (refId === null) return;
+            const parent = getNodeByPath(dnd.parentPath);
+            const arr = parent.children;
+            const fromI = arr.findIndex(c => c.id === dnd.draggedId);
+            if (fromI < 0) return;
+            const [moved] = arr.splice(fromI, 1);
+            let refI = arr.findIndex(c => c.id === refId);
+            if (refI < 0) { arr.splice(fromI, 0, moved); return; }
+            if (!before) refI += 1;
+            arr.splice(refI, 0, moved);
             saveTree();
-            render();
+        }
+
+        function cleanupDrag() {
+            if (!dnd) return;
+            if (dnd.timer) clearTimeout(dnd.timer);
+            if (dnd.row) {
+                dnd.row.classList.remove('dragging');
+                dnd.row.style.transform = '';
+                dnd.row.style.zIndex = '';
+                dnd.row.style.transition = '';
+                dnd.row.style.position = '';
+            }
+            if (dnd.indicator && dnd.indicator.parentElement) dnd.indicator.parentElement.removeChild(dnd.indicator);
+            dnd = null;
+        }
+
+        function onTouchStart(e) {
+            if (e.touches.length !== 1 || fromControls(e.target)) return;
+            const t = e.touches[0];
+            beginPress(this, t.clientX, t.clientY, true);
+        }
+        function onTouchMove(e) {
+            if (!dnd) return;
+            const t = e.touches[0];
+            if (!dnd.active) {
+                if (Math.abs(t.clientX - dnd.startX) > 8 || Math.abs(t.clientY - dnd.startY) > 8) {
+                    clearTimeout(dnd.timer); dnd = null;   // moved before hold => let it scroll
+                }
+                return;
+            }
+            e.preventDefault();                            // dragging => block scroll
+            moveDrag(t.clientX, t.clientY);
+        }
+        function onTouchEnd(e) {
+            if (!dnd) return;
+            const wasActive = dnd.active;
+            if (wasActive) { e.preventDefault(); commitDrag(); }
+            cleanupDrag();
+            if (wasActive) render();
+        }
+
+        function onMouseDown(e) {
+            if (e.button !== 0 || fromControls(e.target)) return;
+            beginPress(this, e.clientX, e.clientY, false);
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+        }
+        function onMouseMove(e) {
+            if (!dnd) return;
+            if (!dnd.active) {
+                if (Math.abs(e.clientX - dnd.startX) > 4 || Math.abs(e.clientY - dnd.startY) > 4) activateDrag();
+                else return;
+            }
+            e.preventDefault();
+            moveDrag(e.clientX, e.clientY);
+        }
+        function onMouseUp() {
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+            if (!dnd) return;
+            const wasActive = dnd.active;
+            if (wasActive) commitDrag();
+            cleanupDrag();
+            if (wasActive) render();
         }
 
         function toggleCheck(path) {
             const node = getNodeByPath(path);
             node.checked = !node.checked;
             saveTree();
-            renderDetail();
+            render();
         }
 
         /* ---------- Add product / sub-list ---------- */
@@ -729,6 +878,14 @@
             moveBtn.onclick = () => { closeSheet(); openMovePicker(path); };
             group.appendChild(moveBtn);
 
+            if (node.type === 'list') {
+                const hideBtn = document.createElement('button');
+                hideBtn.className = 'sheet-btn';
+                hideBtn.textContent = node.hidden ? 'Show' : 'Hide';
+                hideBtn.onclick = () => { closeSheet(); toggleHide(path); };
+                group.appendChild(hideBtn);
+            }
+
             const delBtn = document.createElement('button');
             delBtn.className = 'sheet-btn danger'; delBtn.textContent = 'Delete';
             delBtn.onclick = () => { closeSheet(); deleteNode(path); };
@@ -741,6 +898,14 @@
             sheetBox.appendChild(cancel);
 
             sheetOverlay.classList.add('open');
+        }
+
+        function toggleHide(path) {
+            const node = getNodeByPath(path);
+            node.hidden = !node.hidden;
+            if (node.hidden) node.checked = false;   // unmark when hiding
+            saveTree();
+            render();
         }
 
         async function editNode(path) {
@@ -786,6 +951,7 @@
             (parent.children || []).forEach(c => {
                 if (c.type !== 'list') return;
                 if (c.id === excludeId) return;      // skip the node and its whole subtree
+                if (c.hidden) return;                // can't move into a hidden list
                 acc.push({ path: parentPath.concat(c.id), name: c.name, depth: parentPath.length });
                 collectDestLists(c, parentPath.concat(c.id), acc, excludeId);
             });
@@ -871,6 +1037,14 @@
             document.getElementById('menuBackdrop').classList.remove('open');
         }
 
+        function toggleShowHidden() {
+            showHidden = !showHidden;
+            document.getElementById('toggleHiddenLabel').textContent =
+                showHidden ? 'Hide hidden lists' : 'Show hidden lists';
+            closeHomeMenu();
+            render();
+        }
+
         function escapeCSV(val) {
             val = String(val);
             return /[",\n]/.test(val) ? '"' + val.replace(/"/g, '""') + '"' : val;
@@ -895,7 +1069,7 @@
         async function exportCSV() {
             closeHomeMenu();
             if (tree.children.length === 0) { await customAlert('There are no lists to export.'); return; }
-            const rows = ['Level1,Level2,Level3,Level4,Type,Amount,Checked'];
+            const rows = ['Level1,Level2,Level3,Level4,Type,Amount,Checked,Hidden'];
             (function walk(node, names) {
                 (node.children || []).forEach(child => {
                     const path = names.concat(child.name);
@@ -904,6 +1078,7 @@
                     cols.push(child.type);
                     cols.push(child.type === 'product' ? (child.amount || 0) : '');
                     cols.push(child.checked ? '1' : '0');
+                    cols.push(child.hidden ? '1' : '0');
                     rows.push(cols.join(','));
                     if (child.type === 'list') walk(child, path);
                 });
@@ -944,10 +1119,12 @@
                 const type = (c[4] || '').trim().toLowerCase() === 'product' ? 'product' : 'list';
                 const amount = parseFloat(c[5]);
                 const flag = (c[6] || '').trim().toLowerCase();
+                const hflag = (c[7] || '').trim().toLowerCase();
                 parsed.push({
                     names, type,
                     amount: isNaN(amount) ? 0 : amount,
-                    checked: flag === '1' || flag === 'true' || flag === 'yes'
+                    checked: flag === '1' || flag === 'true' || flag === 'yes',
+                    hidden: hflag === '1' || hflag === 'true' || hflag === 'yes'
                 });
             }
             if (parsed.length === 0) { await customAlert('No valid rows were found.'); return; }
@@ -966,12 +1143,13 @@
                     let child = node.children.find(c => c.name === r.names[i]);
                     if (!child) {
                         child = last
-                            ? { id: uid(), name: r.names[i], type: r.type, amount: r.type === 'product' ? r.amount : 0, checked: r.checked, children: [] }
-                            : { id: uid(), name: r.names[i], type: 'list', amount: 0, checked: false, children: [] };
+                            ? { id: uid(), name: r.names[i], type: r.type, amount: r.type === 'product' ? r.amount : 0, checked: r.checked, hidden: r.type === 'list' ? r.hidden : false, children: [] }
+                            : { id: uid(), name: r.names[i], type: 'list', amount: 0, checked: false, hidden: false, children: [] };
                         node.children.push(child);
                     } else if (last) {
                         child.type = r.type;
                         if (r.type === 'product') { child.amount = r.amount; child.checked = r.checked; }
+                        else { child.hidden = r.hidden; }
                     }
                     node = child;
                 }
