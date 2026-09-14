@@ -229,14 +229,36 @@
         #expenseTitle { width: 40%; }
         .amount-wrap { position: relative; width: 40%; }
         .amount-wrap input { width: 100%; padding-right: 38px; }
-        .plus-btn {
+        .op-btn {
             position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
             width: 28px; height: 28px; padding: 0; border: none; border-radius: 6px;
             background-color: var(--orange); color: #fff; font-size: 20px; line-height: 1;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
         }
-        .plus-btn:hover { background-color: #e68900; }
-        .plus-btn:active { transform: translateY(-50%) scale(.88); }
+        .op-btn:hover { background-color: #e68900; }
+        .op-btn:active { transform: translateY(-50%) scale(.88); }
+        .op-icon { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .op-menu {
+            position: absolute; right: 0; top: calc(100% + 6px);
+            min-width: 155px;
+            background: #fff; border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+            overflow: hidden; z-index: 40;
+            opacity: 0; transform: translateY(-6px) scale(.98);
+            transform-origin: top right; pointer-events: none;
+            transition: opacity .16s ease, transform .16s ease;
+        }
+        .op-menu.open { opacity: 1; transform: none; pointer-events: auto; }
+        .op-menu button {
+            width: 100%; text-align: left; padding: 11px 14px; border: none; background: #fff;
+            font-size: 15px; cursor: pointer; color: #333;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .op-menu button:not(:last-child) { border-bottom: 1px solid #eee; }
+        .op-menu button:active { background: #f2f2f2; }
+        .op-menu .op-sym { font-size: 19px; width: 20px; text-align: center; color: var(--green); font-weight: bold; }
         .add-btn {
             background-color: var(--green); color: white; border: none;
             padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 15px;
@@ -376,7 +398,13 @@
                 <input type="text" id="expenseTitle" placeholder="Product name" />
                 <div class="amount-wrap">
                     <input type="number" id="expenseAmount" placeholder="Amount" />
-                    <button type="button" class="plus-btn" onclick="accumulateAmount()" title="Add to the amount already entered">+</button>
+                    <button type="button" class="op-btn" id="opBtn" onclick="toggleOpMenu(event)" title="Choose operation"><img src="ASMD.png" alt="operations" class="op-icon" /></button>
+                    <div class="op-menu" id="opMenu">
+                        <button type="button" onclick="applyOp('+')"><span class="op-sym">+</span> Add</button>
+                        <button type="button" onclick="applyOp('-')"><span class="op-sym">&minus;</span> Subtract</button>
+                        <button type="button" onclick="applyOp('*')"><span class="op-sym">&times;</span> Multiply</button>
+                        <button type="button" onclick="applyOp('/')"><span class="op-sym">&divide;</span> Divide</button>
+                    </div>
                 </div>
                 <button class="add-btn" onclick="addProduct()">Add</button>
             </div>
@@ -403,7 +431,8 @@
            ============================================================ */
         let tree = null;             // root { children:[...] } (root has no name/id)
         let currentPath = [];        // ids from root to the node currently open
-        let pendingBase = 0;         // carried amount for the "+" button
+        let acc = null;              // running value for the operator picker
+        let pendingOp = null;        // operation to apply next ('+','-','*','/')
         let dnd = null;              // active drag state (custom touch/mouse reorder)
         let showHidden = false;      // reveal hidden lists (resets each load)
 
@@ -778,21 +807,50 @@
 
         /* ---------- Add product / sub-list ---------- */
         function clearProductForm() {
-            pendingBase = 0;
+            acc = null; pendingOp = null;
             const t = document.getElementById('expenseTitle');
             const a = document.getElementById('expenseAmount');
             if (t) t.value = '';
             if (a) { a.value = ''; a.placeholder = 'Amount'; }
         }
 
-        function accumulateAmount() {
+        const OP_SYMBOL = { '+': '+', '-': '\u2212', '*': '\u00D7', '/': '\u00F7' };
+        function computeOp(x, op, y) {
+            switch (op) {
+                case '+': return x + y;
+                case '-': return x - y;
+                case '*': return x * y;
+                case '/': return y === 0 ? NaN : x / y;
+                default:  return y;
+            }
+        }
+
+        function toggleOpMenu(e) { e.stopPropagation(); document.getElementById('opMenu').classList.toggle('open'); }
+        function closeOpMenu() { const m = document.getElementById('opMenu'); if (m) m.classList.remove('open'); }
+
+        // Pick an operator: bank the current number with the previous operator, then wait for the next number.
+        async function applyOp(op) {
             const a = document.getElementById('expenseAmount');
             const v = parseFloat(a.value.trim());
-            if (!isNaN(v)) pendingBase += v;
+            if (acc === null) {
+                acc = isNaN(v) ? 0 : v;
+            } else if (!isNaN(v)) {
+                const r = computeOp(acc, pendingOp, v);
+                if (!isFinite(r)) { closeOpMenu(); await customAlert('Cannot divide by zero.'); return; }
+                acc = r;
+            }
+            pendingOp = op;
             a.value = '';
-            a.placeholder = '+ \u20B9' + pendingBase;
+            a.placeholder = formatAmount(acc) + ' ' + OP_SYMBOL[op];
+            closeOpMenu();
             a.focus();
         }
+
+        // close the operator menu when tapping elsewhere
+        document.addEventListener('click', (e) => {
+            const m = document.getElementById('opMenu');
+            if (m && m.classList.contains('open') && !e.target.closest('.amount-wrap')) m.classList.remove('open');
+        });
 
         async function addProduct() {
             const node = getNodeByPath(currentPath);
@@ -801,10 +859,16 @@
             const amountEl = document.getElementById('expenseAmount');
             const title = titleEl.value.trim();
             const typedRaw = amountEl.value.trim();
-            const typed = typedRaw === '' ? 0 : parseFloat(typedRaw);
-            const amount = pendingBase + typed;
+            const v = typedRaw === '' ? NaN : parseFloat(typedRaw);
 
-            if (!title || isNaN(amount) || amount < 0) {
+            let amount;
+            if (acc === null) {
+                amount = isNaN(v) ? NaN : v;                          // no operator used
+            } else {
+                amount = isNaN(v) ? acc : computeOp(acc, pendingOp, v); // finish the pending operation
+            }
+
+            if (!title || isNaN(amount) || !isFinite(amount) || amount < 0) {
                 await customAlert('Please enter a valid product name and amount.');
                 return;
             }
