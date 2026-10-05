@@ -8,21 +8,102 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        :root {
-            --green: #7c9d56;
-            --green-dark: #6a8c4c;
+        /* ===================== THEMES ===================== */
+        :root, html[data-theme="green"] {
+            --accent: #7c9d56;
+            --accent-dark: #6a8c4c;
+            --on-accent: #ffffff;
+            --app-bg: #f4f4f9;
             --panel: #f1f7f4;
             --card: #ffffff;
+            --text: #333333;
+            --text-soft: #666666;
+            --muted: #9aa39c;
+            --border: #eeeeee;
+            --line: #dfe8e2;
+            --input-border: #dddddd;
+            --press: #f2f2f2;
+            --hover-soft: #e9efe9;
+            --dash-hover: #eef4ea;
+            --chev: #c2c9c4;
+            --grip: #cdd4ce;
+            --cancel: #c7cdc9;
+            --cancel-hover: #b8beba;
             --red: #ff6f61;
             --red-dark: #e65c4b;
             --orange: #ffa500;
+            --orange-dark: #e68900;
+            --shadow-1: rgba(0, 0, 0, .08);
+            --shadow-2: rgba(0, 0, 0, .18);
+            --backdrop: rgba(0, 0, 0, .4);
+            color-scheme: light;
+        }
+
+        html[data-theme="brown"] {
+            --accent: #8b5e3c;
+            --accent-dark: #734a2e;
+            --on-accent: #ffffff;
+            --app-bg: #faf6f2;
+            --panel: #f7f1ea;
+            --card: #ffffff;
+            --text: #3a2f28;
+            --text-soft: #6b5a4e;
+            --muted: #a89385;
+            --border: #f0e7de;
+            --line: #e8dbcd;
+            --input-border: #e2d5c8;
+            --press: #f5ede5;
+            --hover-soft: #f0e6db;
+            --dash-hover: #f6eee5;
+            --chev: #cbb8a8;
+            --grip: #d8c8b9;
+            --cancel: #d6c7b8;
+            --cancel-hover: #c7b5a3;
+            --red: #d4634f;
+            --red-dark: #bb5241;
+            --orange: #d98a2b;
+            --orange-dark: #bd7520;
+            --shadow-1: rgba(80, 50, 30, .10);
+            --shadow-2: rgba(80, 50, 30, .20);
+            --backdrop: rgba(45, 30, 20, .45);
+            color-scheme: light;
+        }
+
+        html[data-theme="dark"] {
+            --accent: #88a86a;
+            --accent-dark: #9cbb7e;
+            --on-accent: #10140f;
+            --app-bg: #0e100f;
+            --panel: #161917;
+            --card: #1f2321;
+            --text: #e6eae6;
+            --text-soft: #b4bbb5;
+            --muted: #85908a;
+            --border: #2b302d;
+            --line: #2b302d;
+            --input-border: #343a36;
+            --press: #272c29;
+            --hover-soft: #272c29;
+            --dash-hover: #22271f;
+            --chev: #6f7a74;
+            --grip: #5f6a64;
+            --cancel: #343a36;
+            --cancel-hover: #3e453f;
+            --red: #e4705f;
+            --red-dark: #cc5f50;
+            --orange: #d79a3f;
+            --orange-dark: #c0872f;
+            --shadow-1: rgba(0, 0, 0, .45);
+            --shadow-2: rgba(0, 0, 0, .55);
+            --backdrop: rgba(0, 0, 0, .6);
+            color-scheme: dark;
         }
 
         html, body { height: 100%; }
 
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+            background-color: var(--app-bg);
             display: flex;
             justify-content: center;
             align-items: flex-start;
@@ -34,7 +115,7 @@
             position: relative;
             background-color: var(--panel);
             border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px var(--shadow-1);
             width: 90%;
             max-width: 400px;
             height: calc(100vh - 20px);
@@ -71,11 +152,11 @@
             margin-bottom: 15px;
             flex-shrink: 0;
         }
-        .app-title { color: var(--green); margin: 0; }
+        .app-title { color: var(--accent); margin: 0; }
 
         .menu-btn {
-            background-color: var(--green);
-            color: #fff;
+            background-color: var(--accent);
+            color: var(--on-accent);
             border: none;
             width: 40px; height: 40px;
             border-radius: 10px;
@@ -83,7 +164,7 @@
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
         }
-        .menu-btn:hover { background-color: var(--green-dark); }
+        .menu-btn:hover { background-color: var(--accent-dark); }
 
         .menu-backdrop { position: fixed; inset: 0; z-index: 15; display: none; }
         .menu-backdrop.open { display: block; }
@@ -92,9 +173,9 @@
             position: absolute;
             top: 66px; right: 20px;
             min-width: 190px;
-            background: #fff;
+            background: var(--card);
             border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 24px var(--shadow-2);
             overflow: hidden;
             z-index: 20;
             opacity: 0;
@@ -106,12 +187,12 @@
         .home-menu.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
         .home-menu button {
             width: 100%; text-align: left;
-            padding: 14px 16px; border: none; background: #fff;
-            font-size: 15px; cursor: pointer; color: #333;
+            padding: 14px 16px; border: none; background: var(--card);
+            font-size: 15px; cursor: pointer; color: var(--text);
             display: flex; align-items: center; gap: 10px;
         }
-        .home-menu button:not(:last-child) { border-bottom: 1px solid #eee; }
-        .home-menu button:active { background: #f2f2f2; }
+        .home-menu button:not(:last-child) { border-bottom: 1px solid var(--border); }
+        .home-menu button:active { background: var(--press); }
         .home-menu .menu-icon { font-size: 16px; width: 18px; text-align: center; }
         .home-menu .danger { color: var(--red); }
 
@@ -125,6 +206,7 @@
             flex-direction: column;
             gap: 10px;
             padding-right: 2px;
+            overscroll-behavior: contain;
         }
         .home-rows { margin-bottom: 15px; gap: 6px; }
         .home-rows .row { padding: 10px 8px 10px 12px; }
@@ -136,99 +218,177 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 5px var(--shadow-1);
         }
         .row.folder { cursor: pointer; }
         .row.folder:active { transform: scale(.985); }
-        .row.dragging { opacity: .97; box-shadow: 0 12px 26px rgba(0,0,0,.24); }
+        .row.dragging { opacity: .97; box-shadow: 0 12px 26px var(--shadow-2); }
         .drop-indicator {
             position: absolute; left: 0; right: 0; height: 3px;
-            background: var(--green); border-radius: 2px;
+            background: var(--accent); border-radius: 2px;
             pointer-events: none; z-index: 5; display: none;
         }
 
-        .row-name { flex-grow: 1; text-align: left; color: #333; font-weight: bold; }
+        .row-name { flex-grow: 1; text-align: left; color: var(--text); font-weight: bold; }
         .row.product .row-name { font-weight: normal; }
-        .row-amount { color: var(--green); font-weight: bold; white-space: nowrap; }
-        .row.product .row-amount { color: #333; font-weight: normal; }
-        .chevron { color: #c2c9c4; font-size: 18px; line-height: 1; margin-left: 2px; }
+        .row-amount { color: var(--accent); font-weight: bold; white-space: nowrap; }
+        .row.product .row-amount { color: var(--text); font-weight: normal; }
+        .chevron { color: var(--chev); font-size: 18px; line-height: 1; margin-left: 2px; }
+
+        /* amount + mode picker */
+        .amt-wrap { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+        .amt-wrap.marked-mode .row-amount::before {
+            content: '\2713'; font-size: .78em; margin-right: 3px; opacity: .85;
+        }
+        .amt-caret {
+            background: transparent; border: none; cursor: pointer;
+            color: var(--muted); font-size: 16px; line-height: 1;
+            width: 18px; height: 22px; padding: 0; border-radius: 5px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .amt-caret:hover { background: var(--hover-soft); color: var(--accent); }
+
+        /* date image before an item name */
+        .date-img {
+            width: 1.55em; height: 1.55em; border-radius: 5px;
+            object-fit: cover; flex-shrink: 0; display: block;
+        }
+        .date-chip {
+            flex-shrink: 0; font-size: .68em; color: var(--muted);
+            border: 1px solid var(--border); border-radius: 5px; padding: 2px 4px;
+            white-space: nowrap;
+        }
 
         .dot-btn {
             flex-shrink: 0;
             background: transparent;
             border: none;
-            color: #9aa39c;
+            color: var(--muted);
             font-size: 20px; line-height: 1;
             width: 30px; height: 30px;
             border-radius: 6px;
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
         }
-        .dot-btn:hover { background: #e9efe9; color: #556; }
+        .dot-btn:hover { background: var(--hover-soft); color: var(--text); }
 
         .grip {
-            flex-shrink: 0; cursor: move; color: #cdd4ce;
+            flex-shrink: 0; cursor: move; color: var(--grip);
             font-size: 16px; line-height: 1; padding-right: 2px;
         }
-        .checkbox { flex-shrink: 0; transform: scale(1.15); margin: 0 4px 0 0; }
+        .checkbox { flex-shrink: 0; transform: scale(1.15); margin: 0 4px 0 0; accent-color: var(--accent); }
 
-        .empty-msg { color: #999; margin: 20px 0; text-align: center; }
+        .empty-msg { color: var(--muted); margin: 20px 0; text-align: center; }
 
         .home-footer { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
         .add-list-btn {
-            background-color: var(--green);
-            color: white; border: none;
+            background-color: var(--accent);
+            color: var(--on-accent); border: none;
             padding: 14px; flex: 1 1 auto;
             border-radius: 10px; cursor: pointer;
             font-size: 16px;
         }
-        .add-list-btn:hover { background-color: var(--green-dark); }
+        .add-list-btn:hover { background-color: var(--accent-dark); }
         .home-total, .home-totals {
             display: flex; flex-direction: column; align-items: flex-end;
             line-height: 1.15; white-space: nowrap; flex-shrink: 0;
         }
         .ht-block { display: flex; align-items: baseline; gap: 5px; }
-        .ht-label { font-size: .62em; color: #9aa39c; text-transform: uppercase; letter-spacing: .4px; }
-        .ht-amount { font-size: 1.0em; font-weight: bold; color: var(--green); }
+        .ht-label { font-size: .62em; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+        .ht-amount { font-size: 1.0em; font-weight: bold; color: var(--accent); }
 
         .row.is-hidden { opacity: .5; }
 
         /* ---------- Detail page ---------- */
         .header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-shrink: 0; }
         .back-btn {
-            background-color: var(--green); color: #fff; border: none;
+            background-color: var(--accent); color: var(--on-accent); border: none;
             padding: 8px 12px; border-radius: 8px; cursor: pointer;
             display: flex; align-items: center; gap: 6px; font-size: 14px; flex-shrink: 0;
         }
-        .back-btn:hover { background-color: var(--green-dark); }
+        .back-btn:hover { background-color: var(--accent-dark); }
         .back-btn .arrow { font-size: 1.15em; line-height: 1; }
 
         .detail-title {
             flex: 1 1 auto; min-width: 0;
-            text-align: center; color: var(--green);
+            text-align: center; color: var(--accent);
             font-weight: bold; font-size: 1.1em;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .detail-menu-btn { width: 38px; height: 38px; border-radius: 8px; flex-shrink: 0; }
 
         .breadcrumb {
-            font-size: .8em; color: #9aa39c; margin-bottom: 3px;
+            font-size: .8em; color: var(--muted); margin-bottom: 3px;
             display: flex; flex-wrap: wrap; align-items: center; gap: 3px; flex-shrink: 0;
         }
-        .breadcrumb .crumb { cursor: pointer; color: var(--green); }
-        .breadcrumb .sep { color: #c8cec9; }
+        .breadcrumb .crumb { cursor: pointer; color: var(--accent); }
+        .breadcrumb .sep { color: var(--chev); }
 
         .current-list-name {
-            color: var(--green); font-size: 1.4em; font-weight: bold;
+            color: var(--accent); font-size: 1.4em; font-weight: bold;
             text-align: left; margin-bottom: 12px; flex-shrink: 0;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        .expense-form { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-shrink: 0; }
-        .expense-form input { padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
-        #expenseTitle { width: 40%; }
+        .expense-form {
+            display: flex; gap: 10px; margin-bottom: 10px;
+            align-items: center; flex-shrink: 0; position: relative;
+        }
+        .expense-form input {
+            padding: 10px; border: 2px solid var(--input-border); border-radius: 8px;
+            font-size: 16px; background: var(--card); color: var(--text);
+        }
+        .expense-form input::placeholder { color: var(--muted); }
+        .title-wrap { position: relative; width: 40%; }
+        .title-wrap input { width: 100%; padding-right: 36px; }
         .amount-wrap { position: relative; width: 40%; }
         .amount-wrap input { width: 100%; padding-right: 38px; }
+
+        .cal-btn {
+            position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+            width: 28px; height: 28px; padding: 0; border: none; border-radius: 6px;
+            background: transparent; color: var(--muted); font-size: 17px; line-height: 1;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+        .cal-btn:hover { background: var(--hover-soft); }
+        .cal-btn:active { transform: translateY(-50%) scale(.88); }
+        .cal-btn.has-date { background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: bold; }
+        .cal-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .cal-pop {
+            position: absolute; z-index: 45; top: calc(100% + 8px); left: 0;
+            width: 258px; max-width: 100%;
+            background: var(--card); border-radius: 12px;
+            box-shadow: 0 8px 26px var(--shadow-2);
+            padding: 10px; display: none;
+        }
+        .cal-pop.open { display: block; }
+        .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+        .cal-head button {
+            border: none; background: transparent; color: var(--accent);
+            font-size: 20px; line-height: 1; width: 30px; height: 30px;
+            border-radius: 8px; cursor: pointer;
+        }
+        .cal-head button:hover { background: var(--hover-soft); }
+        .cal-label { font-weight: bold; color: var(--text); font-size: 14px; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+        .cal-dow { text-align: center; font-size: 10px; color: var(--muted); padding: 3px 0; }
+        .cal-day {
+            border: none; background: transparent; color: var(--text);
+            font-size: 13px; height: 30px; border-radius: 8px; cursor: pointer; padding: 0;
+        }
+        .cal-day:hover { background: var(--hover-soft); }
+        .cal-day.blank { visibility: hidden; pointer-events: none; }
+        .cal-day.today { box-shadow: inset 0 0 0 1.5px var(--accent); }
+        .cal-day.sel { background: var(--accent); color: var(--on-accent); font-weight: bold; }
+        .cal-foot { display: flex; gap: 8px; margin-top: 8px; }
+        .cal-foot button {
+            flex: 1; padding: 8px; border: none; border-radius: 8px;
+            background: var(--press); color: var(--text); font-size: 13px; cursor: pointer;
+        }
+        .cal-foot button:hover { background: var(--hover-soft); }
+
         .op-btn {
             position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
             width: 28px; height: 28px; padding: 0; border: none; border-radius: 6px;
@@ -236,15 +396,15 @@
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             overflow: hidden;
         }
-        .op-btn:hover { background-color: #e68900; }
+        .op-btn:hover { background-color: var(--orange-dark); }
         .op-btn:active { transform: translateY(-50%) scale(.88); }
         .op-icon { width: 100%; height: 100%; object-fit: cover; display: block; }
 
         .op-menu {
             position: absolute; right: 0; top: calc(100% + 6px);
             min-width: 155px;
-            background: #fff; border-radius: 10px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+            background: var(--card); border-radius: 10px;
+            box-shadow: 0 8px 24px var(--shadow-2);
             overflow: hidden; z-index: 40;
             opacity: 0; transform: translateY(-6px) scale(.98);
             transform-origin: top right; pointer-events: none;
@@ -252,25 +412,25 @@
         }
         .op-menu.open { opacity: 1; transform: none; pointer-events: auto; }
         .op-menu button {
-            width: 100%; text-align: left; padding: 11px 14px; border: none; background: #fff;
-            font-size: 15px; cursor: pointer; color: #333;
+            width: 100%; text-align: left; padding: 11px 14px; border: none; background: var(--card);
+            font-size: 15px; cursor: pointer; color: var(--text);
             display: flex; align-items: center; gap: 12px;
         }
-        .op-menu button:not(:last-child) { border-bottom: 1px solid #eee; }
-        .op-menu button:active { background: #f2f2f2; }
-        .op-menu .op-sym { font-size: 19px; width: 20px; text-align: center; color: var(--green); font-weight: bold; }
+        .op-menu button:not(:last-child) { border-bottom: 1px solid var(--border); }
+        .op-menu button:active { background: var(--press); }
+        .op-menu .op-sym { font-size: 19px; width: 20px; text-align: center; color: var(--accent); font-weight: bold; }
         .add-btn {
-            background-color: var(--green); color: white; border: none;
+            background-color: var(--accent); color: var(--on-accent); border: none;
             padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 15px;
         }
-        .add-btn:hover { background-color: var(--green-dark); }
+        .add-btn:hover { background-color: var(--accent-dark); }
 
         .add-sublist-btn {
-            background: #fff; color: var(--green); border: 2px dashed var(--green);
+            background: var(--card); color: var(--accent); border: 2px dashed var(--accent);
             padding: 9px; width: 100%; border-radius: 8px; cursor: pointer;
             font-size: 14px; margin-bottom: 12px; flex-shrink: 0;
         }
-        .add-sublist-btn:hover { background: #eef4ea; }
+        .add-sublist-btn:hover { background: var(--dash-hover); }
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
         .rows-container.anim { animation: slideUp .22s ease; }
@@ -278,56 +438,57 @@
         .total-amount-container {
             display: flex; justify-content: space-between; align-items: center;
             padding-top: 14px; margin-top: 10px;
-            border-top: 1px solid #dfe8e2; flex-shrink: 0;
+            border-top: 1px solid var(--line); flex-shrink: 0;
         }
-        .total-amount h2, .total-amount-large h2 { font-size: 0.95em; color: var(--green); }
+        .total-amount h2, .total-amount-large h2 { font-size: 0.95em; color: var(--accent); }
         .total-amount { text-align: left; }
         .total-amount-large { text-align: right; }
 
         /* ---------- Dialogs ---------- */
         .overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,.4);
+            position: fixed; inset: 0; background: var(--backdrop);
             display: flex; justify-content: center; align-items: center;
             opacity: 0; pointer-events: none; transition: opacity .25s ease; z-index: 50;
         }
         .overlay.open { opacity: 1; pointer-events: auto; }
         .dialog {
-            background: #fff; width: 84%; max-width: 330px; border-radius: 16px;
+            background: var(--card); width: 84%; max-width: 330px; border-radius: 16px;
             padding: 22px 20px 16px; text-align: center;
             transform: scale(.85); opacity: 0;
             transition: transform .28s cubic-bezier(.32,.72,0,1), opacity .28s ease;
         }
         .overlay.open .dialog { transform: scale(1); opacity: 1; }
-        .dialog h3 { color: #333; margin-bottom: 8px; font-size: 1.15em; }
-        .dialog p { color: #666; font-size: .92em; margin-bottom: 16px; line-height: 1.4; }
+        .dialog h3 { color: var(--text); margin-bottom: 8px; font-size: 1.15em; }
+        .dialog p { color: var(--text-soft); font-size: .92em; margin-bottom: 16px; line-height: 1.4; }
         .dialog input {
-            width: 100%; padding: 11px; border: 2px solid #ddd;
+            width: 100%; padding: 11px; border: 2px solid var(--input-border);
             border-radius: 8px; font-size: 16px; margin-bottom: 16px;
+            background: var(--card); color: var(--text);
         }
         .dialog-buttons { display: flex; gap: 10px; }
         .dialog-buttons button {
             flex: 1; padding: 11px; border: none; border-radius: 8px;
-            cursor: pointer; font-size: 15px; color: #fff;
+            cursor: pointer; font-size: 15px; color: var(--on-accent);
         }
-        .btn-cancel { background: #c7cdc9; color: #333 !important; }
-        .btn-cancel:hover { background: #b8beba; }
-        .btn-ok { background: var(--green); }
-        .btn-ok:hover { background: var(--green-dark); }
-        .btn-danger { background: var(--red); }
+        .btn-cancel { background: var(--cancel); color: var(--text) !important; }
+        .btn-cancel:hover { background: var(--cancel-hover); }
+        .btn-ok { background: var(--accent); }
+        .btn-ok:hover { background: var(--accent-dark); }
+        .btn-danger { background: var(--red); color: #fff; }
         .btn-danger:hover { background: var(--red-dark); }
 
         .move-list {
             max-height: 42vh; overflow-y: auto; text-align: left;
-            margin-bottom: 14px; border: 1px solid #eee; border-radius: 8px;
+            margin-bottom: 14px; border: 1px solid var(--border); border-radius: 8px;
         }
         .move-list button {
             width: 100%; text-align: left; padding: 12px 12px; border: none;
-            border-bottom: 1px solid #f0f0f0; background: #fff; cursor: pointer;
-            font-size: 14px; color: #333; display: flex; align-items: center; gap: 6px;
+            border-bottom: 1px solid var(--border); background: var(--card); cursor: pointer;
+            font-size: 14px; color: var(--text); display: flex; align-items: center; gap: 6px;
         }
         .move-list button:last-child { border-bottom: none; }
-        .move-list button:hover { background: #f3f7f2; }
-        .move-list .mv-icon { color: var(--green); }
+        .move-list button:hover { background: var(--press); }
+        .move-list .mv-icon { color: var(--accent); }
 
         /* ---------- Action sheet ---------- */
         .sheet {
@@ -337,18 +498,18 @@
             transition: transform .35s cubic-bezier(.32,.72,0,1);
         }
         .overlay.open .sheet { transform: translateY(0); }
-        .sheet-group { background: #fff; border-radius: 14px; overflow: hidden; }
-        .sheet-title { padding: 14px; color: #888; font-size: .85em; border-bottom: 1px solid #eee; }
+        .sheet-group { background: var(--card); border-radius: 14px; overflow: hidden; }
+        .sheet-title { padding: 14px; color: var(--muted); font-size: .85em; border-bottom: 1px solid var(--border); }
         .sheet-btn {
-            width: 100%; padding: 15px; border: none; background: #fff;
-            font-size: 16px; cursor: pointer; color: var(--green);
+            width: 100%; padding: 15px; border: none; background: var(--card);
+            font-size: 16px; cursor: pointer; color: var(--accent);
         }
-        .sheet-btn:not(:last-child) { border-bottom: 1px solid #eee; }
+        .sheet-btn:not(:last-child) { border-bottom: 1px solid var(--border); }
         .sheet-btn.danger { color: var(--red); }
-        .sheet-btn:active { background: #f2f2f2; }
+        .sheet-btn:active { background: var(--press); }
         .sheet-cancel {
-            width: 100%; padding: 15px; border: none; background: #fff;
-            border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; color: #333;
+            width: 100%; padding: 15px; border: none; background: var(--card);
+            border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; color: var(--text);
         }
     </style>
 </head>
@@ -368,6 +529,7 @@
             <div class="home-menu" id="homeMenu">
                 <button onclick="triggerImport()"><span class="menu-icon">&#8595;</span> Import CSV</button>
                 <button onclick="exportCSV()"><span class="menu-icon">&#8593;</span> Export CSV</button>
+                <button onclick="openThemeMenu()"><span class="menu-icon">&#9680;</span> Theme</button>
                 <button onclick="toggleShowHidden()"><span class="menu-icon">&#128065;</span> <span id="toggleHiddenLabel">Show hidden lists</span></button>
                 <button class="danger" onclick="clearAllLists()"><span class="menu-icon">&#128465;</span> Clear All Lists</button>
             </div>
@@ -395,9 +557,12 @@
             <div class="breadcrumb" id="breadcrumb"></div>
 
             <div class="expense-form">
-                <input type="text" id="expenseTitle" placeholder="Product name" />
+                <div class="title-wrap">
+                    <input type="text" id="expenseTitle" placeholder="Item" />
+                    <button type="button" class="cal-btn" id="calBtn" onclick="toggleCalendar(event)" title="Pick a date">&#128197;</button>
+                </div>
                 <div class="amount-wrap">
-                    <input type="number" id="expenseAmount" placeholder="Amount" />
+                    <input type="number" id="expenseAmount" placeholder="Price" />
                     <button type="button" class="op-btn" id="opBtn" onclick="toggleOpMenu(event)" title="Choose operation"><img src="ASMD.png" alt="operations" class="op-icon" /></button>
                     <div class="op-menu" id="opMenu">
                         <button type="button" onclick="applyOp('+')"><span class="op-sym">+</span> Add</button>
@@ -407,6 +572,19 @@
                     </div>
                 </div>
                 <button class="add-btn" onclick="addProduct()">Add</button>
+
+                <div class="cal-pop" id="calPop">
+                    <div class="cal-head">
+                        <button type="button" onclick="calShift(-1)" title="Previous month">&#8249;</button>
+                        <span class="cal-label" id="calLabel"></span>
+                        <button type="button" onclick="calShift(1)" title="Next month">&#8250;</button>
+                    </div>
+                    <div class="cal-grid" id="calGrid"></div>
+                    <div class="cal-foot">
+                        <button type="button" onclick="calPick(null)">No date</button>
+                        <button type="button" onclick="calToday()">Today</button>
+                    </div>
+                </div>
             </div>
 
             <div class="rows-container" id="detailRows"></div>
@@ -435,6 +613,8 @@
         let pendingOp = null;        // operation to apply next ('+','-','*','/')
         let dnd = null;              // active drag state (custom touch/mouse reorder)
         let showHidden = false;      // reveal hidden lists (resets each load)
+        let pendingDate = null;      // date chosen in the form ('YYYY-MM-DD') or null
+        let calCursor = null;        // month currently shown in the calendar popup
 
         const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
@@ -474,6 +654,21 @@
             if (node.type === 'product') return node.amount || 0;
             return (node.children || []).reduce((s, c) => s + (c.hidden ? 0 : nodeTotal(c)), 0);
         }
+
+        /* The amount a node contributes upward.
+           A list set to 'marked' counts only its marked children; 'total' counts them all.
+           Each child is counted through nodeValue, so a child's own choice is respected too. */
+        function amountMode(node) { return node.amountMode === 'marked' ? 'marked' : 'total'; }
+
+        function nodeValue(node) {
+            if (node.type === 'product') return node.amount || 0;
+            const onlyMarked = amountMode(node) === 'marked';
+            return (node.children || []).reduce((sum, c) => {
+                if (c.hidden) return sum;
+                if (onlyMarked && !c.checked) return sum;
+                return sum + nodeValue(c);
+            }, 0);
+        }
         function formatAmount(n) { return Number.isInteger(n) ? String(n) : n.toFixed(2); }
 
         /* ---------- Navigation ---------- */
@@ -494,8 +689,10 @@
         function goBack() { go(currentPath.slice(0, -1)); }
 
         document.addEventListener('DOMContentLoaded', () => {
+            applyTheme(localStorage.getItem('spendzTheme') || 'green');
             migrateIfNeeded();
             tree = getTree();
+            updateDateButton();
             render();
         });
 
@@ -520,7 +717,7 @@
             let grand = 0, marked = 0;
             tree.children.forEach(n => {
                 if (n.hidden) return;                 // hidden lists excluded from totals
-                const amt = nodeTotal(n);
+                const amt = nodeValue(n);
                 grand += amt;
                 if (n.checked) marked += amt;
             });
@@ -584,7 +781,7 @@
             let marked = 0, total = 0;
             node.children.forEach(c => {
                 if (c.hidden) return;
-                const amt = nodeTotal(c);
+                const amt = nodeValue(c);
                 total += amt;
                 if (c.checked) marked += amt;
             });
@@ -615,14 +812,42 @@
                 row.appendChild(cb);
             }
 
+            // date badge from the AllDates folder, shown before the item name
+            if (node.type === 'product' && node.date) {
+                const img = document.createElement('img');
+                img.className = 'date-img';
+                img.src = 'AllDates/' + dateImageFile(node.date);
+                img.alt = dateLabel(node.date);
+                img.title = dateLabel(node.date);
+                img.onerror = () => {                       // no image on disk -> small text badge
+                    const chip = document.createElement('span');
+                    chip.className = 'date-chip';
+                    chip.textContent = dateLabel(node.date);
+                    if (img.parentElement) img.parentElement.replaceChild(chip, img);
+                };
+                row.appendChild(img);
+            }
+
             const name = document.createElement('span');
             name.className = 'row-name'; name.textContent = node.name;
             row.appendChild(name);
 
+            const amtWrap = document.createElement('span');
+            amtWrap.className = 'amt-wrap';
             const amt = document.createElement('span');
             amt.className = 'row-amount';
-            amt.textContent = '\u20B9' + formatAmount(nodeTotal(node));
-            row.appendChild(amt);
+            amt.textContent = '\u20B9' + formatAmount(nodeValue(node));
+            amtWrap.appendChild(amt);
+            if (isList) {
+                if (amountMode(node) === 'marked') amtWrap.classList.add('marked-mode');
+                const caret = document.createElement('button');
+                caret.className = 'amt-caret';
+                caret.textContent = '\u203A';
+                caret.title = 'Marked or total amount';
+                caret.onclick = (e) => { e.stopPropagation(); openAmountModeMenu(path); };
+                amtWrap.appendChild(caret);
+            }
+            row.appendChild(amtWrap);
 
             if (isList) {
                 const chev = document.createElement('span');
@@ -663,7 +888,8 @@
         }
 
         function fromControls(target) {
-            return target.closest('.dot-btn') || (target.classList && target.classList.contains('checkbox'));
+            return target.closest('.dot-btn') || target.closest('.amt-caret')
+                || (target.classList && target.classList.contains('checkbox'));
         }
 
         function beginPress(row, x, y, isTouch) {
@@ -675,16 +901,23 @@
             if (isTouch) dnd.timer = setTimeout(activateDrag, 240);   // long-press to start on touch
         }
 
+        // Measured fresh on every frame, because the list scrolls while dragging.
+        function dragSiblings() {
+            const row = dnd.row;
+            return [...dnd.box.querySelectorAll('.row')]
+                .filter(r => r.dataset.parent === row.dataset.parent && r !== row)
+                .map(el => ({ el, rect: el.getBoundingClientRect() }))
+                .sort((a, b) => a.rect.top - b.rect.top);
+        }
+
         function activateDrag() {
             if (!dnd || dnd.active) return;
             dnd.active = true;
             const row = dnd.row;
             dnd.box = row.parentElement;
             dnd.box.style.position = 'relative';
-            const sibs = [...dnd.box.querySelectorAll('.row')]
-                .filter(r => r.dataset.parent === row.dataset.parent && r !== row);
-            dnd.others = sibs.map(el => ({ el, rect: el.getBoundingClientRect() }))
-                             .sort((a, b) => a.rect.top - b.rect.top);
+            dnd.startScroll = dnd.box.scrollTop;
+            dnd.others = dragSiblings();
             row.classList.add('dragging');
             row.style.transition = 'none';
             row.style.position = 'relative';
@@ -693,12 +926,22 @@
             dnd.indicator.className = 'drop-indicator';
             dnd.box.appendChild(dnd.indicator);
             if (navigator.vibrate) { try { navigator.vibrate(15); } catch (_) {} }
+            dnd.raf = requestAnimationFrame(autoScrollStep);
         }
 
         function moveDrag(x, y) {
             dnd.lastY = y;
-            dnd.row.style.transform = 'translateY(' + (y - dnd.startY) + 'px)';
-            const box = dnd.box, boxRect = box.getBoundingClientRect();
+            paintDrag();
+        }
+
+        // Position the floating row and the drop indicator from the current pointer + scroll.
+        function paintDrag() {
+            if (!dnd || !dnd.active) return;
+            const box = dnd.box, y = dnd.lastY;
+            const scrolled = box.scrollTop - dnd.startScroll;
+            dnd.row.style.transform = 'translateY(' + ((y - dnd.startY) + scrolled) + 'px)';
+            dnd.others = dragSiblings();
+            const boxRect = box.getBoundingClientRect();
             let topY = null, placed = false;
             for (const o of dnd.others) {
                 const mid = o.rect.top + o.rect.height / 2;
@@ -713,8 +956,27 @@
             }
         }
 
+        /* Hold the item near the top or bottom edge and the list keeps scrolling,
+           so it can be dropped past the rows that were on screen when the drag began. */
+        function autoScrollStep() {
+            if (!dnd || !dnd.active) return;
+            const box = dnd.box;
+            const r = box.getBoundingClientRect();
+            const EDGE = 64, MAX = 18;
+            let v = 0;
+            if (dnd.lastY < r.top + EDGE)         v = -MAX * Math.min(1, (r.top + EDGE - dnd.lastY) / EDGE);
+            else if (dnd.lastY > r.bottom - EDGE) v =  MAX * Math.min(1, (dnd.lastY - (r.bottom - EDGE)) / EDGE);
+            if (v !== 0) {
+                const limit = box.scrollHeight - box.clientHeight;
+                const next = Math.max(0, Math.min(limit, box.scrollTop + v));
+                if (next !== box.scrollTop) { box.scrollTop = next; paintDrag(); }
+            }
+            dnd.raf = requestAnimationFrame(autoScrollStep);
+        }
+
         function commitDrag() {
             const y = dnd.lastY;
+            if (dnd.box) dnd.others = dragSiblings();   // rects may have moved under auto-scroll
             let refId = null, before = true;
             for (const o of dnd.others) {
                 const mid = o.rect.top + o.rect.height / 2;
@@ -737,6 +999,7 @@
         function cleanupDrag() {
             if (!dnd) return;
             if (dnd.timer) clearTimeout(dnd.timer);
+            if (dnd.raf) cancelAnimationFrame(dnd.raf);
             if (dnd.row) {
                 dnd.row.classList.remove('dragging');
                 dnd.row.style.transform = '';
@@ -808,10 +1071,13 @@
         /* ---------- Add product / sub-list ---------- */
         function clearProductForm() {
             acc = null; pendingOp = null;
+            pendingDate = null;
             const t = document.getElementById('expenseTitle');
             const a = document.getElementById('expenseAmount');
             if (t) t.value = '';
-            if (a) { a.value = ''; a.placeholder = 'Amount'; }
+            if (a) { a.value = ''; a.placeholder = 'Price'; }
+            closeCalendar();
+            updateDateButton();
         }
 
         const OP_SYMBOL = { '+': '+', '-': '\u2212', '*': '\u00D7', '/': '\u00F7' };
@@ -869,10 +1135,14 @@
             }
 
             if (!title || isNaN(amount) || !isFinite(amount) || amount < 0) {
-                await customAlert('Please enter a valid product name and amount.');
+                await customAlert('Please enter a valid item and price.');
                 return;
             }
-            node.children.unshift({ id: uid(), name: title, type: 'product', amount, checked: false, children: [] });
+            // the date is optional: without one the item is simply added without a badge
+            node.children.unshift({
+                id: uid(), name: title, type: 'product', amount,
+                date: pendingDate || null, checked: false, children: []
+            });
             saveTree();
             clearProductForm();
             titleEl.blur(); amountEl.blur();
@@ -980,6 +1250,8 @@
                 clearProductForm();
                 document.getElementById('expenseTitle').value = node.name;
                 document.getElementById('expenseAmount').value = node.amount;
+                pendingDate = node.date || null;
+                updateDateButton();
                 parent.children = parent.children.filter(c => c.id !== node.id);
                 saveTree();
                 render();
@@ -1133,7 +1405,7 @@
         async function exportCSV() {
             closeHomeMenu();
             if (tree.children.length === 0) { await customAlert('There are no lists to export.'); return; }
-            const rows = ['Level1,Level2,Level3,Level4,Type,Amount,Checked,Hidden'];
+            const rows = ['Level1,Level2,Level3,Level4,Type,Amount,Checked,Hidden,Date,AmountMode'];
             (function walk(node, names) {
                 (node.children || []).forEach(child => {
                     const path = names.concat(child.name);
@@ -1143,6 +1415,8 @@
                     cols.push(child.type === 'product' ? (child.amount || 0) : '');
                     cols.push(child.checked ? '1' : '0');
                     cols.push(child.hidden ? '1' : '0');
+                    cols.push(child.type === 'product' ? (child.date || '') : '');
+                    cols.push(child.type === 'list' ? amountMode(child) : '');
                     rows.push(cols.join(','));
                     if (child.type === 'list') walk(child, path);
                 });
@@ -1151,7 +1425,7 @@
             const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = 'spendz_' + new Date().toISOString().slice(0, 10) + '.csv';
+            a.href = url; a.download = 'spendz_' + fileStamp(new Date()) + '.csv';
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
@@ -1184,11 +1458,15 @@
                 const amount = parseFloat(c[5]);
                 const flag = (c[6] || '').trim().toLowerCase();
                 const hflag = (c[7] || '').trim().toLowerCase();
+                const dstr = (c[8] || '').trim();
+                const mstr = (c[9] || '').trim().toLowerCase();
                 parsed.push({
                     names, type,
                     amount: isNaN(amount) ? 0 : amount,
                     checked: flag === '1' || flag === 'true' || flag === 'yes',
-                    hidden: hflag === '1' || hflag === 'true' || hflag === 'yes'
+                    hidden: hflag === '1' || hflag === 'true' || hflag === 'yes',
+                    date: /^\d{4}-\d{2}-\d{2}$/.test(dstr) ? dstr : null,
+                    amountMode: mstr === 'marked' ? 'marked' : 'total'
                 });
             }
             if (parsed.length === 0) { await customAlert('No valid rows were found.'); return; }
@@ -1207,13 +1485,13 @@
                     let child = node.children.find(c => c.name === r.names[i]);
                     if (!child) {
                         child = last
-                            ? { id: uid(), name: r.names[i], type: r.type, amount: r.type === 'product' ? r.amount : 0, checked: r.checked, hidden: r.type === 'list' ? r.hidden : false, children: [] }
-                            : { id: uid(), name: r.names[i], type: 'list', amount: 0, checked: false, hidden: false, children: [] };
+                            ? { id: uid(), name: r.names[i], type: r.type, amount: r.type === 'product' ? r.amount : 0, checked: r.checked, hidden: r.type === 'list' ? r.hidden : false, date: r.type === 'product' ? r.date : null, amountMode: r.type === 'list' ? r.amountMode : 'total', children: [] }
+                            : { id: uid(), name: r.names[i], type: 'list', amount: 0, checked: false, hidden: false, amountMode: 'total', children: [] };
                         node.children.push(child);
                     } else if (last) {
                         child.type = r.type;
-                        if (r.type === 'product') { child.amount = r.amount; child.checked = r.checked; }
-                        else { child.hidden = r.hidden; }
+                        if (r.type === 'product') { child.amount = r.amount; child.checked = r.checked; child.date = r.date; }
+                        else { child.hidden = r.hidden; child.amountMode = r.amountMode; }
                     }
                     node = child;
                 }
@@ -1230,6 +1508,190 @@
             tree.children = [];
             saveTree();
             renderHome();
+        }
+
+        /* ============================================================
+           DATES  (AllDates/01jan.png \u2026 31dec.png)
+           ============================================================ */
+        const MON3 = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+        const MONTH_NAMES = ['January','February','March','April','May','June',
+                             'July','August','September','October','November','December'];
+        const DOW = ['S','M','T','W','T','F','S'];
+
+        function pad2(n) { return String(n).padStart(2, '0'); }
+        function dateKey(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+        function parseKey(k) { const p = String(k).split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+        function dateImageFile(k) { const d = parseKey(k); return pad2(d.getDate()) + MON3[d.getMonth()] + '.png'; }
+        function monTitle(m) { return MON3[m].charAt(0).toUpperCase() + MON3[m].slice(1); }
+        function dateLabel(k) {
+            const d = parseKey(k);
+            return pad2(d.getDate()) + '-' + monTitle(d.getMonth()) + '-' + String(d.getFullYear()).slice(2);
+        }
+        // export file name: spendz_09-Aug-26
+        function fileStamp(d) {
+            return pad2(d.getDate()) + '-' + monTitle(d.getMonth()) + '-' + String(d.getFullYear()).slice(2);
+        }
+
+        // The calendar button shows the chosen day's image, or a plain calendar glyph.
+        function updateDateButton() {
+            const btn = document.getElementById('calBtn');
+            if (!btn) return;
+            btn.innerHTML = '';
+            if (!pendingDate) {
+                btn.classList.remove('has-date');
+                btn.title = 'Pick a date';
+                btn.innerHTML = '&#128197;';
+                return;
+            }
+            btn.classList.add('has-date');
+            btn.title = dateLabel(pendingDate) + ' \u2014 tap to change';
+            const img = document.createElement('img');
+            img.src = 'AllDates/' + dateImageFile(pendingDate);
+            img.alt = dateLabel(pendingDate);
+            img.onerror = () => { btn.textContent = pad2(parseKey(pendingDate).getDate()); };
+            btn.appendChild(img);
+        }
+
+        /* ---------- Monthly calendar popup ---------- */
+        function toggleCalendar(e) {
+            if (e) e.stopPropagation();
+            const pop = document.getElementById('calPop');
+            if (pop.classList.contains('open')) { closeCalendar(); return; }
+            closeOpMenu();
+            // start on the date already chosen, otherwise on today
+            calCursor = pendingDate ? parseKey(pendingDate) : new Date();
+            calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth(), 1);
+            renderCalendar();
+            pop.classList.add('open');
+        }
+        function closeCalendar() {
+            const pop = document.getElementById('calPop');
+            if (pop) pop.classList.remove('open');
+        }
+        function calShift(delta) {
+            calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() + delta, 1);
+            renderCalendar();
+        }
+        function calToday() {
+            const t = new Date();
+            calCursor = new Date(t.getFullYear(), t.getMonth(), 1);
+            calPick(dateKey(t));
+        }
+        function calPick(key) {
+            pendingDate = key || null;      // 'No date' clears it; a date is never required
+            updateDateButton();
+            closeCalendar();
+        }
+        function renderCalendar() {
+            const label = document.getElementById('calLabel');
+            const grid = document.getElementById('calGrid');
+            if (!label || !grid) return;
+            const y = calCursor.getFullYear(), m = calCursor.getMonth();
+            label.textContent = MONTH_NAMES[m] + ' ' + y;
+
+            grid.innerHTML = '';
+            DOW.forEach(d => {
+                const h = document.createElement('div');
+                h.className = 'cal-dow'; h.textContent = d;
+                grid.appendChild(h);
+            });
+
+            const first = new Date(y, m, 1).getDay();
+            const days = new Date(y, m + 1, 0).getDate();
+            const todayKey = dateKey(new Date());
+
+            for (let i = 0; i < first; i++) {
+                const b = document.createElement('button');
+                b.type = 'button'; b.className = 'cal-day blank'; b.textContent = '';
+                grid.appendChild(b);
+            }
+            for (let d = 1; d <= days; d++) {
+                const key = y + '-' + pad2(m + 1) + '-' + pad2(d);
+                const b = document.createElement('button');
+                b.type = 'button'; b.className = 'cal-day'; b.textContent = d;
+                if (key === todayKey) b.classList.add('today');
+                if (pendingDate === key) b.classList.add('sel');
+                b.onclick = (e) => { e.stopPropagation(); calPick(key); };
+                grid.appendChild(b);
+            }
+        }
+
+        // tap anywhere else to dismiss the calendar
+        document.addEventListener('click', (e) => {
+            const pop = document.getElementById('calPop');
+            if (pop && pop.classList.contains('open') &&
+                !e.target.closest('.cal-pop') && !e.target.closest('.cal-btn')) closeCalendar();
+        });
+
+        /* ============================================================
+           MARKED / TOTAL amount per list
+           ============================================================ */
+        function openAmountModeMenu(path) {
+            const node = getNodeByPath(path);
+            if (!node) return;
+            const cur = amountMode(node);
+            sheetBox.innerHTML = '';
+            const group = document.createElement('div'); group.className = 'sheet-group';
+            const title = document.createElement('div'); title.className = 'sheet-title';
+            title.textContent = 'Amount shown for \u201C' + node.name + '\u201D';
+            group.appendChild(title);
+
+            [['marked', 'Marked Amount'], ['total', 'Total Amount']].forEach(pair => {
+                const b = document.createElement('button');
+                b.className = 'sheet-btn';
+                b.textContent = (cur === pair[0] ? '\u2713  ' : '') + pair[1];
+                b.onclick = () => {
+                    closeSheet();
+                    node.amountMode = pair[0];
+                    saveTree();
+                    render();        // parent pages now roll up this choice
+                };
+                group.appendChild(b);
+            });
+
+            sheetBox.appendChild(group);
+            const cancel = document.createElement('button');
+            cancel.className = 'sheet-cancel'; cancel.textContent = 'Cancel';
+            cancel.onclick = closeSheet;
+            sheetBox.appendChild(cancel);
+            sheetOverlay.classList.add('open');
+        }
+
+        /* ============================================================
+           THEMES
+           ============================================================ */
+        const THEMES = [['green', 'Green'], ['brown', 'Brown'], ['dark', 'Dark']];
+
+        function applyTheme(name) {
+            const valid = THEMES.some(t => t[0] === name) ? name : 'green';
+            document.documentElement.setAttribute('data-theme', valid);
+            localStorage.setItem('spendzTheme', valid);
+        }
+        function currentTheme() { return document.documentElement.getAttribute('data-theme') || 'green'; }
+
+        function openThemeMenu() {
+            closeHomeMenu();
+            const cur = currentTheme();
+            sheetBox.innerHTML = '';
+            const group = document.createElement('div'); group.className = 'sheet-group';
+            const title = document.createElement('div'); title.className = 'sheet-title';
+            title.textContent = 'Theme';
+            group.appendChild(title);
+
+            THEMES.forEach(t => {
+                const b = document.createElement('button');
+                b.className = 'sheet-btn';
+                b.textContent = (cur === t[0] ? '\u2713  ' : '') + t[1];
+                b.onclick = () => { closeSheet(); applyTheme(t[0]); };
+                group.appendChild(b);
+            });
+
+            sheetBox.appendChild(group);
+            const cancel = document.createElement('button');
+            cancel.className = 'sheet-cancel'; cancel.textContent = 'Cancel';
+            cancel.onclick = closeSheet;
+            sheetBox.appendChild(cancel);
+            sheetOverlay.classList.add('open');
         }
 
         /* ============================================================
